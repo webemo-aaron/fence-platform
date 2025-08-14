@@ -44,6 +44,34 @@
             font-size: 1.1rem;
         }
 
+        .header-actions {
+            margin-top: 20px;
+        }
+
+        .header-actions a, .header-actions button {
+            display: inline-block;
+            padding: 12px 24px;
+            margin: 0 10px 10px 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 8px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .header-actions a:hover, .header-actions button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .header-actions .secondary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+
         .professional-badge {
             background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
             color: white;
@@ -52,26 +80,21 @@
             font-size: 12px;
             font-weight: 600;
             display: inline-block;
-            margin-bottom: 10px;
-        }
-
-        .header-actions {
             position: absolute;
             top: 30px;
             right: 30px;
-            display: flex;
-            gap: 10px;
         }
 
         .header-btn {
+            display: inline-block;
             padding: 10px 20px;
+            margin: 0 5px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            border: none;
+            text-decoration: none;
             border-radius: 8px;
             font-weight: 600;
-            cursor: pointer;
-            text-decoration: none;
+            font-size: 0.95rem;
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -126,37 +149,40 @@
         }
 
         .tier-btn:hover {
-            border-color: #667eea;
-            transform: translateY(-2px);
+            background: #f0f4f8;
         }
 
         .tier-btn.active {
-            background: #667eea;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
             border-color: #667eea;
         }
 
         .form-group {
-            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
         }
 
-        label {
+        .form-group label {
             display: block;
             color: #555;
             margin-bottom: 5px;
+            font-size: 0.9rem;
             font-weight: 500;
         }
 
-        input[type="number"] {
+        .form-group input {
             width: 100%;
             padding: 10px;
-            border: 2px solid #e0e0e0;
+            border: 1px solid #ddd;
             border-radius: 6px;
-            font-size: 16px;
+            font-size: 1rem;
             transition: border-color 0.3s;
         }
 
-        input[type="number"]:focus {
+        .form-group input:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -164,10 +190,12 @@
         .roi-metric {
             display: flex;
             justify-content: space-between;
-            padding: 12px;
-            background: #f8f9fa;
-            border-radius: 6px;
-            margin-bottom: 10px;
+            padding: 12px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .roi-metric:last-child {
+            border-bottom: none;
         }
 
         .roi-metric .label {
@@ -184,82 +212,89 @@
         .roi-metric.total {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
         }
 
-        .roi-metric.total .label,
-        .roi-metric.total .value {
+        .roi-metric.total .label, .roi-metric.total .value {
             color: white;
         }
 
-        .chart-container {
-            margin-top: 20px;
-            padding: 20px;
-            background: #f8f9fa;
+        .status {
+            padding: 15px;
             border-radius: 8px;
-            min-height: 300px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: 500;
+            animation: slideDown 0.3s ease;
+        }
+
+        .status.success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+
+        .status.error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+
+        .status.processing {
+            background: #cce5ff;
+            color: #004085;
+            border: 1px solid #b8daff;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            margin-right: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
         }
 
         .actions {
             display: grid;
-            grid-template-columns: 1fr 1fr;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
             gap: 10px;
             margin-top: 20px;
         }
 
-        .btn {
-            padding: 12px 20px;
-            border: none;
-            border-radius: 6px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .btn-primary {
-            background: #667eea;
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background: #5a67d8;
-            transform: translateY(-2px);
-        }
-
-        .btn-secondary {
-            background: #48bb78;
-            color: white;
-        }
-
-        .btn-secondary:hover {
-            background: #38a169;
-            transform: translateY(-2px);
-        }
-
-        .status {
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-weight: 500;
-        }
-
-        .status.processing {
-            background: #fef5e7;
-            color: #8b6914;
-        }
-
-        .status.success {
-            background: #e8f5e9;
-            color: #2e7d32;
-        }
-
-        .status.error {
-            background: #ffebee;
-            color: #c62828;
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
         }
 
         .config-section {
@@ -311,14 +346,14 @@
             <h1>🚀 Fence Platform Professional</h1>
             <p class="subtitle">Event-Driven Automation with Dynamic Pricing Tiers</p>
             <div class="header-actions">
-                <button onclick="connectFacebook()" class="header-btn primary">
+                <button onclick="connectFacebook()" class="secondary">
                     📱 Connect Facebook
                 </button>
-                <a href="https://fence-enterprise-frontend-453424326027.us-central1.run.app" class="header-btn" target="_blank">
+                <a href="https://fence-enterprise-frontend-453424326027.us-central1.run.app" target="_blank">
                     🏢 Upgrade to Enterprise
                 </a>
-                <a href="/ux-showcase.html" class="header-btn">
-                    🎨 All Features
+                <a href="/ux-showcase.html">
+                    🎨 View All Features
                 </a>
             </div>
         </header>
@@ -326,53 +361,46 @@
         <div id="status" class="status" style="display: none;"></div>
 
         <div class="dashboard">
-            <!-- Tier Input Card -->
+            <!-- Tier Selection Card -->
             <div class="card">
-                <h2>Tier Configuration</h2>
+                <h2>Select Pricing Tier</h2>
                 
                 <div class="tier-selector">
                     <button class="tier-btn active" data-tier="Essentials">Essentials</button>
                     <button class="tier-btn" data-tier="Professional">Professional</button>
                     <button class="tier-btn" data-tier="Enterprise">Enterprise</button>
                 </div>
-
-                <form id="tier-form">
-                    <div class="form-group">
-                        <label>Base Price ($/month)</label>
-                        <input type="number" name="basePrice" value="299" min="0" step="1">
+                
+                <form id="tier-form" class="form-group">
+                    <div>
+                        <label>Base Price ($)</label>
+                        <input type="number" name="basePrice" value="299" min="0">
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Admin Hours Saved</label>
-                        <input type="number" name="adminHours" value="20" min="0" step="1">
+                    <div>
+                        <label>Admin Hours/Month</label>
+                        <input type="number" name="adminHours" value="20" min="0">
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Admin Cost ($)</label>
-                        <input type="number" name="adminCost" value="50" min="0" step="1">
+                    <div>
+                        <label>Admin Cost ($/hr)</label>
+                        <input type="number" name="adminCost" value="50" min="0">
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Travel Hours Optimized</label>
-                        <input type="number" name="travelHours" value="10" min="0" step="1">
+                    <div>
+                        <label>Travel Hours/Month</label>
+                        <input type="number" name="travelHours" value="10" min="0">
                     </div>
-                    
-                    <div class="form-group">
+                    <div>
                         <label>Revenue Leakage (%)</label>
-                        <input type="number" name="revenuLeakagePercent" value="5" min="0" max="100" step="0.1">
+                        <input type="number" name="revenuLeakagePercent" value="5" min="0" max="100">
                     </div>
-                    
-                    <div class="form-group">
-                        <label>Payment Delays Recovered ($)</label>
-                        <input type="number" name="paymentDelays" value="500" min="0" step="1">
+                    <div>
+                        <label>Payment Delays ($)</label>
+                        <input type="number" name="paymentDelays" value="500" min="0">
                     </div>
-                    
-                    <div class="form-group">
+                    <div>
                         <label>Upsell Revenue ($)</label>
-                        <input type="number" name="upsellRevenue" value="0" min="0" step="1">
+                        <input type="number" name="upsellRevenue" value="0" min="0">
                     </div>
-                    
-                    <div class="form-group">
+                    <div>
                         <label>Predictive Maintenance ($)</label>
                         <input type="number" name="predictiveMaintenance" value="0" min="0" step="1">
                     </div>
@@ -381,7 +409,7 @@
 
             <!-- ROI Results Card -->
             <div class="card">
-                <h2>Professional ROI Analysis</h2>
+                <h2>ROI Analysis</h2>
                 
                 <div id="roi-results">
                     <div class="roi-metric">
@@ -391,12 +419,12 @@
                     
                     <div class="roi-metric">
                         <span class="label">Travel Savings</span>
-                        <span class="value" id="travel-savings">$350</span>
+                        <span class="value" id="travel-savings">$500</span>
                     </div>
                     
                     <div class="roi-metric">
                         <span class="label">Revenue Recovery</span>
-                        <span class="value" id="revenue-recovery">$2,500</span>
+                        <span class="value" id="revenue-recovery">$1,500</span>
                     </div>
                     
                     <div class="roi-metric">
@@ -416,17 +444,17 @@
                     
                     <div class="roi-metric total">
                         <span class="label">Total Monthly ROI</span>
-                        <span class="value" id="monthly-roi">$4,350</span>
+                        <span class="value" id="monthly-roi">$3,500</span>
                     </div>
                     
                     <div class="roi-metric">
                         <span class="label">Annual ROI</span>
-                        <span class="value" id="annual-roi">$52,200</span>
+                        <span class="value" id="annual-roi">$42,000</span>
                     </div>
                     
                     <div class="roi-metric">
                         <span class="label">Payback Period</span>
-                        <span class="value" id="payback-period">2.1 months</span>
+                        <span class="value" id="payback-period">0.1 months</span>
                     </div>
                 </div>
             </div>
@@ -435,32 +463,25 @@
             <div class="card">
                 <h2>Global Configuration</h2>
                 
-                <div class="config-section">
-                    <form id="config-form">
-                        <div class="config-grid">
-                            <div class="form-group">
-                                <label>Hourly Rate ($)</label>
-                                <input type="number" name="hourlyRate" value="35" min="0" step="1">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Monthly Revenue ($)</label>
-                                <input type="number" name="monthlyRevenue" value="50000" min="0" step="100">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Manual Admin Hours</label>
-                                <input type="number" name="manualAdminHours" value="80" min="0" step="1">
-                            </div>
-                            
-                            <div class="form-group">
-                                <label>Manual Travel Hours</label>
-                                <input type="number" name="manualTravelHours" value="40" min="0" step="1">
-                            </div>
-                        </div>
-                    </form>
-                </div>
-
+                <form id="config-form" class="form-group">
+                    <div>
+                        <label>Hourly Rate ($/hr)</label>
+                        <input type="number" name="hourlyRate" value="50" min="0">
+                    </div>
+                    <div>
+                        <label>Monthly Revenue ($)</label>
+                        <input type="number" name="monthlyRevenue" value="30000" min="0">
+                    </div>
+                    <div>
+                        <label>Manual Admin Hours</label>
+                        <input type="number" name="manualAdminHours" value="40" min="0">
+                    </div>
+                    <div>
+                        <label>Manual Travel Hours</label>
+                        <input type="number" name="manualTravelHours" value="20" min="0">
+                    </div>
+                </form>
+                
                 <div class="actions">
                     <button class="btn btn-primary" onclick="updateConfiguration()">
                         Update Config
@@ -473,7 +494,7 @@
 
             <!-- Charts Card -->
             <div class="card" style="grid-column: span 2;">
-                <h2>Professional Analytics - Visual Comparison</h2>
+                <h2>Visual Comparison</h2>
                 <div class="chart-container" id="chart-container">
                     <canvas id="comparison-chart"></canvas>
                 </div>
@@ -482,11 +503,10 @@
     </div>
 
     <script>
-        const API_URL = 'https://fence-pricing-service-453424326027.us-central1.run.app';
-        let currentTier = 'Professional';
+        let currentTier = 'Essentials';
         let comparisonChart = null;
 
-        // Facebook Integration
+        // Connect to Facebook
         function connectFacebook() {
             window.location.href = 'https://fence-auth-service-453424326027.us-central1.run.app/auth/facebook';
         }
@@ -498,11 +518,9 @@
             statusEl.className = `status ${type}`;
             statusEl.style.display = 'block';
             
-            if (type === 'success' || type === 'error') {
-                setTimeout(() => {
-                    statusEl.style.display = 'none';
-                }, 3000);
-            }
+            setTimeout(() => {
+                statusEl.style.display = 'none';
+            }, 3000);
         }
 
         // Tier selector
@@ -512,7 +530,6 @@
                 this.classList.add('active');
                 currentTier = this.dataset.tier;
                 loadTierData(currentTier);
-                showStatus(`Switched to ${currentTier} tier`, 'success');
             });
         });
 
@@ -570,7 +587,8 @@
             const upsellRevenue = input.upsellRevenue;
             const predictiveMaintenance = input.predictiveMaintenance;
             
-            const monthlyROI = adminSavings + travelSavings + revenueRecovery + paymentRecovery + upsellRevenue + predictiveMaintenance;
+            const monthlyROI = adminSavings + travelSavings + revenueRecovery + 
+                              paymentRecovery + upsellRevenue + predictiveMaintenance;
             const annualROI = monthlyROI * 12;
             const paybackPeriod = input.basePrice / monthlyROI;
             
@@ -602,43 +620,43 @@
         }
 
         // Update configuration
-        async function updateConfiguration() {
-            showStatus('Configuration updated successfully', 'success');
+        function updateConfiguration() {
             updateTierInput();
+            showStatus('Configuration updated successfully', 'success');
         }
 
         // Load tier data
         function loadTierData(tier) {
             const defaults = {
                 'Essentials': {
-                    basePrice: 149,
-                    adminHours: 15,
-                    adminCost: 35,
-                    travelHours: 8,
-                    revenuLeakagePercent: 3,
-                    paymentDelays: 300,
+                    basePrice: 299,
+                    adminHours: 20,
+                    adminCost: 50,
+                    travelHours: 10,
+                    revenuLeakagePercent: 5,
+                    paymentDelays: 500,
                     upsellRevenue: 0,
                     predictiveMaintenance: 0
                 },
                 'Professional': {
-                    basePrice: 299,
-                    adminHours: 25,
-                    adminCost: 50,
-                    travelHours: 12,
-                    revenuLeakagePercent: 5,
-                    paymentDelays: 500,
-                    upsellRevenue: 200,
-                    predictiveMaintenance: 100
-                },
-                'Enterprise': {
                     basePrice: 599,
                     adminHours: 40,
                     adminCost: 75,
                     travelHours: 20,
                     revenuLeakagePercent: 8,
                     paymentDelays: 1000,
-                    upsellRevenue: 800,
-                    predictiveMaintenance: 400
+                    upsellRevenue: 500,
+                    predictiveMaintenance: 0
+                },
+                'Enterprise': {
+                    basePrice: 999,
+                    adminHours: 60,
+                    adminCost: 100,
+                    travelHours: 30,
+                    revenuLeakagePercent: 12,
+                    paymentDelays: 2000,
+                    upsellRevenue: 1500,
+                    predictiveMaintenance: 1000
                 }
             };
             
@@ -654,8 +672,7 @@
             form.upsellRevenue.value = data.upsellRevenue;
             form.predictiveMaintenance.value = data.predictiveMaintenance;
             
-            // Trigger calculation
-            setTimeout(updateTierInput, 100);
+            updateTierInput();
         }
 
         // Create/Update comparison chart
@@ -667,21 +684,21 @@
                 comparisonChart.destroy();
             }
             
-            // Get all tier calculations
+            // Calculate for all tiers
             const tiers = ['Essentials', 'Professional', 'Enterprise'];
             const calculations = tiers.map(tier => {
-                const savedTier = currentTier;
+                const defaults = {
+                    'Essentials': { basePrice: 299, adminHours: 20, adminCost: 50, travelHours: 10, revenuLeakagePercent: 5, paymentDelays: 500, upsellRevenue: 0, predictiveMaintenance: 0 },
+                    'Professional': { basePrice: 599, adminHours: 40, adminCost: 75, travelHours: 20, revenuLeakagePercent: 8, paymentDelays: 1000, upsellRevenue: 500, predictiveMaintenance: 0 },
+                    'Enterprise': { basePrice: 999, adminHours: 60, adminCost: 100, travelHours: 30, revenuLeakagePercent: 12, paymentDelays: 2000, upsellRevenue: 1500, predictiveMaintenance: 1000 }
+                };
+                
+                const tempTier = currentTier;
                 currentTier = tier;
-                loadTierData(tier);
-                const calc = calculateROI(getTierFormData());
-                currentTier = savedTier;
-                return calc;
+                const result = calculateROI(defaults[tier]);
+                currentTier = tempTier;
+                return result;
             });
-            
-            const monthlyROI = calculations.map(c => c.monthlyROI);
-            const adminSavings = calculations.map(c => c.adminSavings);
-            const travelSavings = calculations.map(c => c.travelSavings);
-            const revenueRecovery = calculations.map(c => c.revenueRecovery);
             
             comparisonChart = new Chart(ctx, {
                 type: 'bar',
@@ -689,39 +706,32 @@
                     labels: tiers,
                     datasets: [
                         {
-                            label: 'Admin Savings',
-                            data: adminSavings,
+                            label: 'Total Monthly ROI',
+                            data: calculations.map(c => c.monthlyROI),
                             backgroundColor: 'rgba(102, 126, 234, 0.8)',
                             borderColor: 'rgba(102, 126, 234, 1)',
                             borderWidth: 2
                         },
                         {
-                            label: 'Travel Savings', 
-                            data: travelSavings,
+                            label: 'Admin Savings',
+                            data: calculations.map(c => c.adminSavings),
                             backgroundColor: 'rgba(72, 187, 120, 0.8)',
                             borderColor: 'rgba(72, 187, 120, 1)',
                             borderWidth: 2
                         },
                         {
-                            label: 'Revenue Recovery',
-                            data: revenueRecovery,
-                            backgroundColor: 'rgba(245, 101, 101, 0.8)',
-                            borderColor: 'rgba(245, 101, 101, 1)',
+                            label: 'Travel Savings',
+                            data: calculations.map(c => c.travelSavings),
+                            backgroundColor: 'rgba(251, 188, 5, 0.8)',
+                            borderColor: 'rgba(251, 188, 5, 1)',
                             borderWidth: 2
                         },
                         {
-                            label: 'Total Monthly ROI',
-                            data: monthlyROI,
-                            type: 'line',
-                            backgroundColor: 'rgba(118, 75, 162, 0.2)',
-                            borderColor: 'rgba(118, 75, 162, 1)',
-                            borderWidth: 3,
-                            fill: false,
-                            tension: 0.4,
-                            pointBackgroundColor: 'rgba(118, 75, 162, 1)',
-                            pointBorderColor: 'white',
-                            pointBorderWidth: 2,
-                            pointRadius: 6
+                            label: 'Revenue Recovery',
+                            data: calculations.map(c => c.revenueRecovery),
+                            backgroundColor: 'rgba(237, 100, 166, 0.8)',
+                            borderColor: 'rgba(237, 100, 166, 1)',
+                            borderWidth: 2
                         }
                     ]
                 },
@@ -772,56 +782,32 @@
                             grid: { color: 'rgba(0, 0, 0, 0.1)' }
                         },
                         x: {
-                            ticks: {
-                                color: '#666',
-                                font: { weight: 'bold' }
-                            },
+                            ticks: { color: '#666', font: { weight: 'bold' } },
                             grid: { display: false }
                         }
                     },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeInOutQuart'
-                    }
+                    animation: { duration: 1000, easing: 'easeInOutQuart' }
                 }
             });
         }
 
-        // Get tier form data
-        function getTierFormData() {
-            const form = document.getElementById('tier-form');
-            const formData = new FormData(form);
-            
-            return {
-                basePrice: parseFloat(formData.get('basePrice')),
-                adminHours: parseFloat(formData.get('adminHours')),
-                adminCost: parseFloat(formData.get('adminCost')),
-                travelHours: parseFloat(formData.get('travelHours')),
-                revenuLeakagePercent: parseFloat(formData.get('revenuLeakagePercent')),
-                paymentDelays: parseFloat(formData.get('paymentDelays')),
-                upsellRevenue: parseFloat(formData.get('upsellRevenue')),
-                predictiveMaintenance: parseFloat(formData.get('predictiveMaintenance'))
-            };
-        }
-
         // Update ROI display
         function updateROIDisplay(calc) {
-            document.getElementById('admin-savings').textContent = `$${calc.adminSavings.toFixed(0)}`;
-            document.getElementById('travel-savings').textContent = `$${calc.travelSavings.toFixed(0)}`;
-            document.getElementById('revenue-recovery').textContent = `$${calc.revenueRecovery.toFixed(0)}`;
-            document.getElementById('payment-recovery').textContent = `$${calc.paymentRecovery.toFixed(0)}`;
-            document.getElementById('upsell-revenue').textContent = `$${calc.upsellRevenue.toFixed(0)}`;
-            document.getElementById('predictive-maintenance').textContent = `$${calc.predictiveMaintenance.toFixed(0)}`;
-            document.getElementById('monthly-roi').textContent = `$${calc.monthlyROI.toFixed(0)}`;
-            document.getElementById('annual-roi').textContent = `$${calc.annualROI.toFixed(0)}`;
+            document.getElementById('admin-savings').textContent = `$${calc.adminSavings.toLocaleString()}`;
+            document.getElementById('travel-savings').textContent = `$${calc.travelSavings.toLocaleString()}`;
+            document.getElementById('revenue-recovery').textContent = `$${calc.revenueRecovery.toLocaleString()}`;
+            document.getElementById('payment-recovery').textContent = `$${calc.paymentRecovery.toLocaleString()}`;
+            document.getElementById('upsell-revenue').textContent = `$${calc.upsellRevenue.toLocaleString()}`;
+            document.getElementById('predictive-maintenance').textContent = `$${calc.predictiveMaintenance.toLocaleString()}`;
+            document.getElementById('monthly-roi').textContent = `$${calc.monthlyROI.toLocaleString()}`;
+            document.getElementById('annual-roi').textContent = `$${calc.annualROI.toLocaleString()}`;
             document.getElementById('payback-period').textContent = `${calc.paybackPeriod.toFixed(1)} months`;
             
-            // Update comparison chart
             renderComparisonChart();
         }
 
         // Export data
-        async function exportData() {
+        function exportData() {
             const data = {
                 plan: 'Professional',
                 monthly_cost: 299,

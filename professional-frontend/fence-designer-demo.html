@@ -1,0 +1,716 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fence Designer Demo - Invisible Fence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 380px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-header p {
+            opacity: 0.95;
+            font-size: 0.95rem;
+        }
+
+        .demo-notice {
+            background: #fef5e7;
+            border: 1px solid #f39c12;
+            color: #8b6914;
+            padding: 12px;
+            margin: 15px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+        }
+
+        /* Drawing Tools */
+        .tools-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tool-btn {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tool-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .tool-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tool-btn.delete {
+            background: #ff4444;
+            color: white;
+            border-color: #ff4444;
+        }
+
+        /* Measurements Section */
+        .measurements-section {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .measurement-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .measurement-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .measurement-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .measurement-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .measurement-value.highlight {
+            color: #667eea;
+        }
+
+        /* Scale Input */
+        .scale-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .scale-input {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .scale-input input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .scale-input span {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Quote Section */
+        .quote-section {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-estimate {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .price-label {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            margin-bottom: 5px;
+        }
+
+        .price-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        /* Canvas Container */
+        .canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background: #e8e8e8;
+        }
+
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+            background: white;
+        }
+
+        .canvas-instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+
+        .grid-toggle {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+
+        .help-tip {
+            background: #fef5e7;
+            border: 1px solid #f39c12;
+            color: #8b6914;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🗺️ Fence Designer</h1>
+                <p>Draw your property fence layout</p>
+            </div>
+
+            <div class="demo-notice">
+                🎮 <strong>Demo Mode:</strong> This is a simplified drawing tool. For real property mapping with Google Maps, please contact us for the full version.
+            </div>
+
+            <!-- Drawing Tools -->
+            <div class="tools-section">
+                <h3 class="section-title">🛠️ Drawing Tools</h3>
+                <div class="tool-buttons">
+                    <button class="tool-btn active" id="draw-btn" onclick="setMode('draw')">
+                        ✏️ Draw
+                    </button>
+                    <button class="tool-btn" id="gate-btn" onclick="setMode('gate')">
+                        🚪 Add Gate
+                    </button>
+                    <button class="tool-btn" id="undo-btn" onclick="undoLast()">
+                        ↩️ Undo
+                    </button>
+                    <button class="tool-btn delete" onclick="clearCanvas()">
+                        🗑️ Clear All
+                    </button>
+                </div>
+                <div class="help-tip">
+                    💡 <strong>Tip:</strong> Click to add fence corners. Right-click or press 'C' to close the fence. Gates are shown as orange squares.
+                </div>
+            </div>
+
+            <!-- Scale Section -->
+            <div class="scale-section">
+                <h3 class="section-title">📐 Property Scale</h3>
+                <div class="scale-input">
+                    <span>1 pixel =</span>
+                    <input type="number" id="scale-input" value="1" min="0.1" step="0.1" onchange="updateScale()">
+                    <span>feet</span>
+                </div>
+            </div>
+
+            <!-- Measurements -->
+            <div class="measurements-section">
+                <h3 class="section-title">📏 Measurements</h3>
+                <div class="measurement-grid">
+                    <div class="measurement-item">
+                        <div class="measurement-label">Perimeter</div>
+                        <div class="measurement-value highlight" id="perimeter">0 ft</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Area</div>
+                        <div class="measurement-value" id="area">0 sq ft</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Gates</div>
+                        <div class="measurement-value" id="gates">0</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Corners</div>
+                        <div class="measurement-value" id="corners">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote Section -->
+            <div class="quote-section">
+                <div class="price-estimate">
+                    <div class="price-label">Estimated Installation Cost</div>
+                    <div class="price-value" id="price-estimate">$0</div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn primary" onclick="getQuote()">
+                        💰 Get Detailed Quote
+                    </button>
+                    <button class="action-btn secondary" onclick="saveDesign()">
+                        💾 Save Design
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-container">
+            <canvas id="drawingCanvas"></canvas>
+            
+            <div class="grid-toggle">
+                <label>
+                    <input type="checkbox" id="gridToggle" checked onchange="toggleGrid()">
+                    Show Grid
+                </label>
+            </div>
+            
+            <div class="canvas-instructions">
+                <span id="instructions">Click to place fence corners • Right-click to complete</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        let mode = 'draw';
+        let points = [];
+        let gates = [];
+        let isDrawing = false;
+        let showGrid = true;
+        let scale = 1; // 1 pixel = 1 foot
+        
+        const PRICE_PER_FOOT = 15;
+        const GATE_PRICE = 250;
+        
+        // Initialize canvas
+        function initCanvas() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            canvas.addEventListener('click', handleClick);
+            canvas.addEventListener('contextmenu', handleRightClick);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'c' || e.key === 'C') {
+                    closeFence();
+                }
+            });
+            
+            drawCanvas();
+        }
+        
+        // Resize canvas
+        function resizeCanvas() {
+            const container = document.querySelector('.canvas-container');
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            drawCanvas();
+        }
+        
+        // Handle click
+        function handleClick(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (mode === 'draw') {
+                points.push({ x, y });
+                isDrawing = true;
+                drawCanvas();
+                updateMeasurements();
+            } else if (mode === 'gate') {
+                gates.push({ x, y });
+                drawCanvas();
+                updateMeasurements();
+            }
+        }
+        
+        // Handle right click
+        function handleRightClick(e) {
+            e.preventDefault();
+            if (isDrawing && points.length > 2) {
+                closeFence();
+            }
+        }
+        
+        // Handle mouse move
+        function handleMouseMove(e) {
+            if (isDrawing && points.length > 0) {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                drawCanvas();
+                
+                // Draw preview line
+                ctx.strokeStyle = 'rgba(102, 126, 234, 0.5)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(points[points.length - 1].x, points[points.length - 1].y);
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+        
+        // Close fence
+        function closeFence() {
+            if (points.length > 2) {
+                isDrawing = false;
+                drawCanvas();
+                updateMeasurements();
+            }
+        }
+        
+        // Draw canvas
+        function drawCanvas() {
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            if (showGrid) {
+                drawGrid();
+            }
+            
+            // Draw fence
+            if (points.length > 0) {
+                // Fill polygon
+                if (!isDrawing && points.length > 2) {
+                    ctx.fillStyle = 'rgba(102, 126, 234, 0.2)';
+                    ctx.beginPath();
+                    ctx.moveTo(points[0].x, points[0].y);
+                    for (let i = 1; i < points.length; i++) {
+                        ctx.lineTo(points[i].x, points[i].y);
+                    }
+                    ctx.closePath();
+                    ctx.fill();
+                }
+                
+                // Draw lines
+                ctx.strokeStyle = '#667eea';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                for (let i = 1; i < points.length; i++) {
+                    ctx.lineTo(points[i].x, points[i].y);
+                }
+                if (!isDrawing && points.length > 2) {
+                    ctx.closePath();
+                }
+                ctx.stroke();
+                
+                // Draw points
+                points.forEach((point, index) => {
+                    ctx.fillStyle = '#667eea';
+                    ctx.beginPath();
+                    ctx.arc(point.x, point.y, 6, 0, 2 * Math.PI);
+                    ctx.fill();
+                    
+                    // Label corners
+                    ctx.fillStyle = '#333';
+                    ctx.font = '12px Arial';
+                    ctx.fillText(index + 1, point.x + 10, point.y - 10);
+                });
+            }
+            
+            // Draw gates
+            gates.forEach((gate, index) => {
+                ctx.fillStyle = '#ff9800';
+                ctx.fillRect(gate.x - 10, gate.y - 10, 20, 20);
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('G', gate.x, gate.y);
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'alphabetic';
+            });
+        }
+        
+        // Draw grid
+        function drawGrid() {
+            const gridSize = 50;
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x < canvas.width; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < canvas.height; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw scale indicator
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.fillText(`Grid: ${gridSize * scale} ft`, 10, canvas.height - 10);
+        }
+        
+        // Calculate distance
+        function calculateDistance(p1, p2) {
+            const dx = p2.x - p1.x;
+            const dy = p2.y - p1.y;
+            return Math.sqrt(dx * dx + dy * dy);
+        }
+        
+        // Calculate area
+        function calculateArea(points) {
+            if (points.length < 3) return 0;
+            
+            let area = 0;
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                area += points[i].x * points[j].y;
+                area -= points[j].x * points[i].y;
+            }
+            return Math.abs(area / 2);
+        }
+        
+        // Update measurements
+        function updateMeasurements() {
+            let perimeter = 0;
+            
+            if (points.length > 1) {
+                for (let i = 0; i < points.length - 1; i++) {
+                    perimeter += calculateDistance(points[i], points[i + 1]);
+                }
+                
+                if (!isDrawing && points.length > 2) {
+                    perimeter += calculateDistance(points[points.length - 1], points[0]);
+                }
+            }
+            
+            const perimeterFeet = Math.round(perimeter * scale);
+            const area = calculateArea(points);
+            const areaFeet = Math.round(area * scale * scale);
+            const gateCount = gates.length;
+            const cornerCount = points.length;
+            
+            const basePrice = perimeterFeet * PRICE_PER_FOOT;
+            const gatePrice = gateCount * GATE_PRICE;
+            const totalPrice = basePrice + gatePrice;
+            
+            document.getElementById('perimeter').textContent = perimeterFeet.toLocaleString() + ' ft';
+            document.getElementById('area').textContent = areaFeet.toLocaleString() + ' sq ft';
+            document.getElementById('gates').textContent = gateCount;
+            document.getElementById('corners').textContent = cornerCount;
+            document.getElementById('price-estimate').textContent = '$' + totalPrice.toLocaleString();
+            
+            // Store data
+            window.fenceData = {
+                perimeter: perimeterFeet,
+                area: areaFeet,
+                gates: gateCount,
+                corners: cornerCount,
+                price: totalPrice,
+                points: points,
+                gatePositions: gates
+            };
+        }
+        
+        // Set drawing mode
+        function setMode(newMode) {
+            mode = newMode;
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(newMode === 'draw' ? 'draw-btn' : 'gate-btn').classList.add('active');
+            
+            if (newMode === 'draw') {
+                canvas.style.cursor = 'crosshair';
+                document.getElementById('instructions').textContent = 'Click to place fence corners • Right-click to complete';
+            } else {
+                canvas.style.cursor = 'pointer';
+                document.getElementById('instructions').textContent = 'Click to place gates on the map';
+            }
+        }
+        
+        // Undo last point
+        function undoLast() {
+            if (isDrawing && points.length > 0) {
+                points.pop();
+                drawCanvas();
+                updateMeasurements();
+            }
+        }
+        
+        // Clear canvas
+        function clearCanvas() {
+            points = [];
+            gates = [];
+            isDrawing = false;
+            drawCanvas();
+            updateMeasurements();
+        }
+        
+        // Toggle grid
+        function toggleGrid() {
+            showGrid = document.getElementById('gridToggle').checked;
+            drawCanvas();
+        }
+        
+        // Update scale
+        function updateScale() {
+            scale = parseFloat(document.getElementById('scale-input').value) || 1;
+            updateMeasurements();
+            drawCanvas();
+        }
+        
+        // Get quote
+        function getQuote() {
+            if (!window.fenceData || window.fenceData.perimeter === 0) {
+                alert('Please draw your fence first!');
+                return;
+            }
+            
+            localStorage.setItem('fenceDesign', JSON.stringify(window.fenceData));
+            alert(`Quote Summary:\n\nPerimeter: ${window.fenceData.perimeter} ft\nArea: ${window.fenceData.area} sq ft\nGates: ${window.fenceData.gates}\n\nEstimated Cost: $${window.fenceData.price.toLocaleString()}\n\nClick OK to proceed to detailed quote.`);
+            window.location.href = '/quote-generator.html?perimeter=' + window.fenceData.perimeter;
+        }
+        
+        // Save design
+        function saveDesign() {
+            if (!window.fenceData || window.fenceData.perimeter === 0) {
+                alert('Please draw your fence first!');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(window.fenceData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'fence-design-' + Date.now() + '.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert('Fence design saved! You can share this file with our team.');
+        }
+        
+        // Initialize
+        window.onload = initCanvas;
+    </script>
+</body>
+</html>

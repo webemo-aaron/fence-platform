@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fence Designer - Invisible Fence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 380px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-header p {
+            opacity: 0.95;
+            font-size: 0.95rem;
+        }
+
+        /* Search Box */
+        .search-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .search-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        #address-input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        #address-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        /* Drawing Tools */
+        .tools-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .tool-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .tool-btn {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tool-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .tool-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .tool-btn.delete {
+            background: #ff4444;
+            color: white;
+            border-color: #ff4444;
+        }
+
+        .tool-btn.delete:hover {
+            background: #cc0000;
+            border-color: #cc0000;
+        }
+
+        /* Measurements Section */
+        .measurements-section {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .measurement-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .measurement-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .measurement-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .measurement-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .measurement-value.highlight {
+            color: #667eea;
+        }
+
+        /* Quote Section */
+        .quote-section {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-estimate {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .price-label {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            margin-bottom: 5px;
+        }
+
+        .price-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .action-btn.primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        .action-btn.secondary:hover {
+            background: #f8f9ff;
+        }
+
+        /* Map Container */
+        .map-container {
+            flex-grow: 1;
+            position: relative;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Map Controls Overlay */
+        .map-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 10px;
+            padding: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+
+        .control-title {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 10px;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 8px;
+        }
+
+        .control-btn {
+            padding: 8px 12px;
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #f8f9fa;
+            border-color: #667eea;
+        }
+
+        /* Instructions Overlay */
+        .instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 5;
+        }
+
+        .instructions-icon {
+            font-size: 1.5rem;
+        }
+
+        .instructions-text {
+            font-size: 0.95rem;
+            color: #555;
+        }
+
+        /* Help Tips */
+        .help-tip {
+            background: #fef5e7;
+            border: 1px solid #f39c12;
+            color: #8b6914;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* Loading State */
+        .loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .spinner {
+            width: 50px;
+            height: 50px;
+            border: 5px solid #f3f3f3;
+            border-top: 5px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                position: absolute;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            
+            .sidebar.open {
+                transform: translateX(0);
+            }
+            
+            .mobile-toggle {
+                display: block;
+                position: absolute;
+                top: 20px;
+                left: 20px;
+                z-index: 15;
+                background: white;
+                padding: 10px;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            }
+        }
+
+        .mobile-toggle {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Mobile Toggle -->
+        <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+
+        <!-- Sidebar -->
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <h1>🗺️ Fence Designer</h1>
+                <p>Draw your property fence on the map</p>
+            </div>
+
+            <!-- Search Section -->
+            <div class="search-section">
+                <label class="search-label">Find Your Property</label>
+                <input type="text" id="address-input" placeholder="Enter your address...">
+            </div>
+
+            <!-- Drawing Tools -->
+            <div class="tools-section">
+                <h3 class="section-title">🛠️ Drawing Tools</h3>
+                <div class="tool-buttons">
+                    <button class="tool-btn active" id="draw-fence-btn" onclick="startDrawing()">
+                        ✏️ Draw Fence
+                    </button>
+                    <button class="tool-btn" id="edit-fence-btn" onclick="editFence()">
+                        ✂️ Edit Points
+                    </button>
+                    <button class="tool-btn" id="add-gate-btn" onclick="addGate()">
+                        🚪 Add Gate
+                    </button>
+                    <button class="tool-btn delete" onclick="clearFence()">
+                        🗑️ Clear All
+                    </button>
+                </div>
+                <div class="help-tip">
+                    💡 <strong>Tip:</strong> Click on the map to add fence points. Double-click to complete the fence. You can drag points to adjust.
+                </div>
+            </div>
+
+            <!-- Measurements -->
+            <div class="measurements-section">
+                <h3 class="section-title">📏 Measurements</h3>
+                <div class="measurement-grid">
+                    <div class="measurement-item">
+                        <div class="measurement-label">Perimeter</div>
+                        <div class="measurement-value highlight" id="perimeter">0 ft</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Area</div>
+                        <div class="measurement-value" id="area">0 sq ft</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Gates</div>
+                        <div class="measurement-value" id="gates">0</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Corners</div>
+                        <div class="measurement-value" id="corners">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quote Section -->
+            <div class="quote-section">
+                <div class="price-estimate">
+                    <div class="price-label">Estimated Installation Cost</div>
+                    <div class="price-value" id="price-estimate">$0</div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn primary" onclick="getDetailedQuote()">
+                        💰 Get Detailed Quote
+                    </button>
+                    <button class="action-btn secondary" onclick="saveFenceDesign()">
+                        💾 Save Design
+                    </button>
+                    <button class="action-btn secondary" onclick="scheduleConsultation()">
+                        📅 Schedule Consultation
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            
+            <!-- Map Controls -->
+            <div class="map-controls">
+                <div class="control-title">Map View</div>
+                <div class="control-buttons">
+                    <button class="control-btn" onclick="changeMapType('roadmap')">Map</button>
+                    <button class="control-btn" onclick="changeMapType('satellite')">Satellite</button>
+                    <button class="control-btn" onclick="changeMapType('hybrid')">Hybrid</button>
+                </div>
+            </div>
+
+            <!-- Instructions -->
+            <div class="instructions" id="instructions">
+                <span class="instructions-icon">📍</span>
+                <span class="instructions-text">Search for your address or click "Draw Fence" to start designing</span>
+            </div>
+
+            <!-- Loading -->
+            <div class="loading" id="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 10px;">Loading map...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Google Maps JavaScript API -->
+    <script>
+        let map;
+        let drawingManager;
+        let fencePolygon;
+        let searchBox;
+        let markers = [];
+        let gateMarkers = [];
+        
+        // Pricing configuration (per linear foot)
+        const PRICE_PER_FOOT = 15; // Base price per linear foot
+        const GATE_PRICE = 250; // Price per gate
+        
+        // Initialize Map
+        function initMap() {
+            // Default to Dallas area
+            const defaultCenter = { lat: 32.7767, lng: -96.7970 };
+            
+            map = new google.maps.Map(document.getElementById('map'), {
+                zoom: 18,
+                center: defaultCenter,
+                mapTypeId: 'satellite',
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false
+            });
+
+            // Initialize Drawing Manager
+            drawingManager = new google.maps.drawing.DrawingManager({
+                drawingMode: null,
+                drawingControl: false,
+                polygonOptions: {
+                    fillColor: '#667eea',
+                    fillOpacity: 0.3,
+                    strokeWeight: 3,
+                    strokeColor: '#667eea',
+                    editable: true,
+                    draggable: false
+                }
+            });
+            drawingManager.setMap(map);
+
+            // Initialize Search Box
+            const input = document.getElementById('address-input');
+            const autocomplete = new google.maps.places.Autocomplete(input);
+            autocomplete.bindTo('bounds', map);
+
+            // Listen for place selection
+            autocomplete.addListener('place_changed', function() {
+                const place = autocomplete.getPlace();
+                
+                if (!place.geometry || !place.geometry.location) {
+                    alert("No details available for: '" + place.name + "'");
+                    return;
+                }
+
+                // Clear existing markers
+                clearMarkers();
+
+                // Center map on selected place
+                if (place.geometry.viewport) {
+                    map.fitBounds(place.geometry.viewport);
+                } else {
+                    map.setCenter(place.geometry.location);
+                    map.setZoom(19);
+                }
+
+                // Add marker
+                const marker = new google.maps.Marker({
+                    map: map,
+                    position: place.geometry.location,
+                    title: place.name
+                });
+                markers.push(marker);
+
+                // Update instructions
+                updateInstructions('Property found! Click "Draw Fence" to start designing your fence.');
+            });
+
+            // Listen for polygon complete
+            google.maps.event.addListener(drawingManager, 'polygoncomplete', function(polygon) {
+                // Remove old polygon if exists
+                if (fencePolygon) {
+                    fencePolygon.setMap(null);
+                }
+                
+                fencePolygon = polygon;
+                drawingManager.setDrawingMode(null);
+                
+                // Add listeners for editing
+                google.maps.event.addListener(polygon.getPath(), 'set_at', updateMeasurements);
+                google.maps.event.addListener(polygon.getPath(), 'insert_at', updateMeasurements);
+                google.maps.event.addListener(polygon.getPath(), 'remove_at', updateMeasurements);
+                
+                // Update measurements
+                updateMeasurements();
+                
+                // Update UI
+                document.getElementById('draw-fence-btn').classList.remove('active');
+                document.getElementById('edit-fence-btn').classList.add('active');
+                
+                updateInstructions('Fence drawn! Drag points to adjust or add gates where needed.');
+            });
+
+            // Hide loading
+            document.getElementById('loading').classList.remove('active');
+        }
+
+        // Start Drawing
+        function startDrawing() {
+            drawingManager.setDrawingMode(google.maps.drawing.OverlayType.POLYGON);
+            
+            // Update UI
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('draw-fence-btn').classList.add('active');
+            
+            updateInstructions('Click on the map to place fence corners. Double-click to complete.');
+        }
+
+        // Edit Fence
+        function editFence() {
+            if (!fencePolygon) {
+                alert('Please draw a fence first!');
+                return;
+            }
+            
+            fencePolygon.setEditable(true);
+            
+            // Update UI
+            document.querySelectorAll('.tool-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('edit-fence-btn').classList.add('active');
+            
+            updateInstructions('Drag the fence points to adjust. Click points to delete them.');
+        }
+
+        // Add Gate
+        function addGate() {
+            if (!fencePolygon) {
+                alert('Please draw a fence first!');
+                return;
+            }
+            
+            updateInstructions('Click on the fence line where you want to add a gate.');
+            
+            // Add click listener to map
+            const listener = google.maps.event.addListenerOnce(map, 'click', function(event) {
+                const gateMarker = new google.maps.Marker({
+                    position: event.latLng,
+                    map: map,
+                    icon: {
+                        url: 'data:image/svg+xml;charset=UTF-8,' + encodeURIComponent(
+                            '<svg xmlns="http://www.w3.org/2000/svg" width="30" height="30" viewBox="0 0 30 30">' +
+                            '<rect x="5" y="5" width="20" height="20" fill="#ff9800" stroke="#fff" stroke-width="2"/>' +
+                            '<text x="15" y="20" text-anchor="middle" fill="#fff" font-size="16" font-weight="bold">G</text>' +
+                            '</svg>'
+                        ),
+                        scaledSize: new google.maps.Size(30, 30),
+                        anchor: new google.maps.Point(15, 15)
+                    },
+                    title: 'Gate',
+                    draggable: true
+                });
+                
+                gateMarkers.push(gateMarker);
+                updateMeasurements();
+                updateInstructions('Gate added! You can drag it to adjust position.');
+            });
+        }
+
+        // Clear Fence
+        function clearFence() {
+            if (fencePolygon) {
+                fencePolygon.setMap(null);
+                fencePolygon = null;
+            }
+            
+            gateMarkers.forEach(marker => marker.setMap(null));
+            gateMarkers = [];
+            
+            updateMeasurements();
+            updateInstructions('Fence cleared. Start drawing a new fence design.');
+        }
+
+        // Update Measurements
+        function updateMeasurements() {
+            if (!fencePolygon) {
+                document.getElementById('perimeter').textContent = '0 ft';
+                document.getElementById('area').textContent = '0 sq ft';
+                document.getElementById('gates').textContent = '0';
+                document.getElementById('corners').textContent = '0';
+                document.getElementById('price-estimate').textContent = '$0';
+                return;
+            }
+            
+            const path = fencePolygon.getPath();
+            
+            // Calculate perimeter
+            let perimeter = 0;
+            for (let i = 0; i < path.getLength(); i++) {
+                const start = path.getAt(i);
+                const end = path.getAt((i + 1) % path.getLength());
+                perimeter += google.maps.geometry.spherical.computeDistanceBetween(start, end);
+            }
+            const perimeterFeet = Math.round(perimeter * 3.28084); // Convert meters to feet
+            
+            // Calculate area
+            const area = google.maps.geometry.spherical.computeArea(path);
+            const areaFeet = Math.round(area * 10.7639); // Convert square meters to square feet
+            
+            // Count corners
+            const corners = path.getLength();
+            
+            // Count gates
+            const gates = gateMarkers.length;
+            
+            // Calculate price
+            const basePrice = perimeterFeet * PRICE_PER_FOOT;
+            const gatePrice = gates * GATE_PRICE;
+            const totalPrice = basePrice + gatePrice;
+            
+            // Update display
+            document.getElementById('perimeter').textContent = perimeterFeet.toLocaleString() + ' ft';
+            document.getElementById('area').textContent = areaFeet.toLocaleString() + ' sq ft';
+            document.getElementById('gates').textContent = gates;
+            document.getElementById('corners').textContent = corners;
+            document.getElementById('price-estimate').textContent = '$' + totalPrice.toLocaleString();
+            
+            // Store for quote generation
+            window.fenceData = {
+                perimeter: perimeterFeet,
+                area: areaFeet,
+                corners: corners,
+                gates: gates,
+                price: totalPrice,
+                coordinates: path.getArray().map(coord => ({
+                    lat: coord.lat(),
+                    lng: coord.lng()
+                }))
+            };
+        }
+
+        // Clear Markers
+        function clearMarkers() {
+            markers.forEach(marker => marker.setMap(null));
+            markers = [];
+        }
+
+        // Change Map Type
+        function changeMapType(type) {
+            map.setMapTypeId(type);
+        }
+
+        // Update Instructions
+        function updateInstructions(text) {
+            document.getElementById('instructions').querySelector('.instructions-text').textContent = text;
+        }
+
+        // Get Detailed Quote
+        function getDetailedQuote() {
+            if (!window.fenceData) {
+                alert('Please draw your fence first!');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('fenceDesign', JSON.stringify(window.fenceData));
+            
+            // Redirect to quote generator with data
+            window.location.href = '/quote-generator.html?perimeter=' + window.fenceData.perimeter;
+        }
+
+        // Save Fence Design
+        function saveFenceDesign() {
+            if (!window.fenceData) {
+                alert('Please draw your fence first!');
+                return;
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('fenceDesign', JSON.stringify(window.fenceData));
+            
+            // Download as JSON
+            const dataStr = JSON.stringify(window.fenceData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'fence-design-' + Date.now() + '.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert('Fence design saved! You can load this design later.');
+        }
+
+        // Schedule Consultation
+        function scheduleConsultation() {
+            if (!window.fenceData) {
+                alert('Please draw your fence first!');
+                return;
+            }
+            
+            // Save design
+            localStorage.setItem('fenceDesign', JSON.stringify(window.fenceData));
+            
+            // Redirect to CRM/appointment system
+            alert('Consultation request submitted! Our team will contact you within 24 hours.');
+        }
+
+        // Toggle Sidebar (mobile)
+        function toggleSidebar() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+    </script>
+
+    <!-- Dynamic Google Maps API Loading -->
+    <script>
+        // Load Google Maps API key from server
+        async function loadGoogleMaps() {
+            try {
+                // Fetch API configuration from server
+                const response = await fetch('http://localhost:3333/api/maps-config');
+                const config = await response.json();
+                
+                if (!config.configured) {
+                    // Show setup instructions if API key not configured
+                    document.getElementById('loading').innerHTML = `
+                        <div style="background: white; padding: 30px; border-radius: 10px; max-width: 600px; margin: 0 auto;">
+                            <h2 style="color: #ff6b6b; margin-bottom: 20px;">⚠️ Google Maps API Key Required</h2>
+                            <p style="color: #333; margin-bottom: 20px;">To use the map features, please configure your Google Maps API key:</p>
+                            <ol style="text-align: left; color: #555; line-height: 1.8;">
+                                <li>Open the file: <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">.env</code></li>
+                                <li>Replace <code style="background: #f0f0f0; padding: 2px 6px; border-radius: 3px;">YOUR_API_KEY_HERE</code> with your actual Google Maps API key</li>
+                                <li>Get a free API key at: <a href="https://console.cloud.google.com/apis/credentials" target="_blank" style="color: #667eea;">Google Cloud Console</a></li>
+                                <li>Restart the server after updating the .env file</li>
+                            </ol>
+                            <div style="margin-top: 20px; padding: 15px; background: #fef5e7; border-radius: 5px;">
+                                <p style="color: #8b6914; margin: 0;">
+                                    📚 <strong>Need help?</strong> Check the setup guide: 
+                                    <code style="background: #fff; padding: 2px 6px; border-radius: 3px;">GOOGLE_MAPS_SETUP.md</code>
+                                </p>
+                            </div>
+                            <div style="margin-top: 20px;">
+                                <a href="/fence-designer-demo.html" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px;">
+                                    Try Demo Version (No API Key Required)
+                                </a>
+                            </div>
+                        </div>
+                    `;
+                    document.getElementById('loading').classList.add('active');
+                    return;
+                }
+                
+                // Load Google Maps with API key
+                const script = document.createElement('script');
+                script.src = `https://maps.googleapis.com/maps/api/js?key=${config.apiKey}&libraries=${config.libraries.join(',')}&callback=initMap`;
+                script.async = true;
+                script.defer = true;
+                document.body.appendChild(script);
+                
+            } catch (error) {
+                console.error('Error loading Google Maps configuration:', error);
+                document.getElementById('loading').innerHTML = `
+                    <div style="background: white; padding: 30px; border-radius: 10px;">
+                        <h2 style="color: #ff6b6b;">Failed to Load Map Configuration</h2>
+                        <p style="color: #666;">Please ensure the API server is running on port 3333</p>
+                        <div style="margin-top: 20px;">
+                            <a href="/fence-designer-demo.html" style="display: inline-block; padding: 12px 24px; background: #667eea; color: white; text-decoration: none; border-radius: 6px;">
+                                Use Demo Version
+                            </a>
+                        </div>
+                    </div>
+                `;
+                document.getElementById('loading').classList.add('active');
+            }
+        }
+        
+        // Load Google Maps on page load
+        window.onload = function() {
+            document.getElementById('loading').classList.add('active');
+            loadGoogleMaps();
+        };
+    </script>
+</body>
+</html>

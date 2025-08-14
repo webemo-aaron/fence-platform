@@ -1,0 +1,1263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Property & Fence Designer - Invisible Fence</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #f5f5f5;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .main-container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 400px;
+            background: white;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+            overflow-y: auto;
+        }
+
+        .sidebar-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 25px;
+        }
+
+        .sidebar-header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+        }
+
+        .sidebar-header p {
+            opacity: 0.95;
+            font-size: 0.95rem;
+        }
+
+        /* Step Indicator */
+        .step-indicator {
+            display: flex;
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .step {
+            flex: 1;
+            text-align: center;
+            position: relative;
+        }
+
+        .step-number {
+            width: 30px;
+            height: 30px;
+            background: #e0e0e0;
+            color: #999;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .step.active .step-number {
+            background: #667eea;
+            color: white;
+        }
+
+        .step.completed .step-number {
+            background: #48bb78;
+            color: white;
+        }
+
+        .step-label {
+            font-size: 0.85rem;
+            color: #666;
+        }
+
+        .step.active .step-label {
+            color: #667eea;
+            font-weight: 600;
+        }
+
+        /* Drawing Tools */
+        .tools-section {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .drawing-modes {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .mode-btn {
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.95rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .mode-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .mode-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .mode-btn .icon {
+            font-size: 1.2rem;
+        }
+
+        .mode-btn .description {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 2px;
+        }
+
+        .tool-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .tool-btn {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .tool-btn:hover {
+            border-color: #667eea;
+            background: #f8f9ff;
+        }
+
+        .tool-btn.delete {
+            background: #ff4444;
+            color: white;
+            border-color: #ff4444;
+        }
+
+        /* Property Settings */
+        .property-settings {
+            padding: 20px;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .input-with-unit {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .input-with-unit input {
+            flex: 1;
+            padding: 8px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+        }
+
+        .input-with-unit span {
+            font-size: 0.9rem;
+            color: #666;
+        }
+
+        /* Measurements Section */
+        .measurements-section {
+            padding: 20px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #e0e0e0;
+        }
+
+        .measurement-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+        }
+
+        .measurement-item {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+        }
+
+        .measurement-label {
+            font-size: 0.85rem;
+            color: #666;
+            margin-bottom: 5px;
+        }
+
+        .measurement-value {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #333;
+        }
+
+        .measurement-value.highlight {
+            color: #667eea;
+        }
+
+        /* Quote Section */
+        .quote-section {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .price-estimate {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .price-label {
+            font-size: 0.9rem;
+            opacity: 0.95;
+            margin-bottom: 5px;
+        }
+
+        .price-value {
+            font-size: 2rem;
+            font-weight: bold;
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .action-btn {
+            padding: 14px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .action-btn.primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .action-btn.secondary {
+            background: white;
+            color: #667eea;
+            border: 2px solid #667eea;
+        }
+
+        /* Canvas Container */
+        .canvas-container {
+            flex-grow: 1;
+            position: relative;
+            background: #e8e8e8;
+        }
+
+        #drawingCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            cursor: crosshair;
+            background: white;
+        }
+
+        /* Canvas Controls */
+        .canvas-controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+
+        .control-group {
+            margin-bottom: 10px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .canvas-instructions {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: white;
+            padding: 15px 25px;
+            border-radius: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+
+        /* Color Legend */
+        .color-legend {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: white;
+            padding: 15px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.15);
+            z-index: 5;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .legend-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            border: 2px solid #333;
+        }
+
+        .legend-label {
+            font-size: 0.85rem;
+            color: #555;
+        }
+
+        .help-tip {
+            background: #fef5e7;
+            border: 1px solid #f39c12;
+            color: #8b6914;
+            padding: 12px;
+            border-radius: 8px;
+            margin-top: 15px;
+            font-size: 0.85rem;
+            line-height: 1.5;
+        }
+
+        /* Dimension Labels */
+        .dimension-label {
+            position: absolute;
+            background: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #333;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>🏠 Property & Fence Designer</h1>
+                <p>Design your complete property layout</p>
+            </div>
+
+            <!-- Step Indicator -->
+            <div class="step-indicator">
+                <div class="step active" id="step-1">
+                    <div class="step-number">1</div>
+                    <div class="step-label">Property</div>
+                </div>
+                <div class="step" id="step-2">
+                    <div class="step-number">2</div>
+                    <div class="step-label">House</div>
+                </div>
+                <div class="step" id="step-3">
+                    <div class="step-number">3</div>
+                    <div class="step-label">Fence</div>
+                </div>
+            </div>
+
+            <!-- Drawing Tools -->
+            <div class="tools-section">
+                <h3 class="section-title">🛠️ Drawing Mode</h3>
+                <div class="drawing-modes">
+                    <button class="mode-btn active" id="property-mode" onclick="setDrawingMode('property')">
+                        <span class="icon">📐</span>
+                        <div>
+                            <div>Property Boundary</div>
+                            <div class="description">Draw your property lines</div>
+                        </div>
+                    </button>
+                    <button class="mode-btn" id="house-mode" onclick="setDrawingMode('house')">
+                        <span class="icon">🏠</span>
+                        <div>
+                            <div>House Outline</div>
+                            <div class="description">Draw your house footprint</div>
+                        </div>
+                    </button>
+                    <button class="mode-btn" id="fence-mode" onclick="setDrawingMode('fence')">
+                        <span class="icon">🔗</span>
+                        <div>
+                            <div>Fence Line</div>
+                            <div class="description">Draw your desired fence</div>
+                        </div>
+                    </button>
+                    <button class="mode-btn" id="obstacles-mode" onclick="setDrawingMode('obstacles')">
+                        <span class="icon">🌳</span>
+                        <div>
+                            <div>Obstacles</div>
+                            <div class="description">Mark trees, pools, etc.</div>
+                        </div>
+                    </button>
+                </div>
+                
+                <div class="tool-buttons">
+                    <button class="tool-btn" onclick="addGate()">
+                        🚪 Add Gate
+                    </button>
+                    <button class="tool-btn" onclick="undoLast()">
+                        ↩️ Undo
+                    </button>
+                    <button class="tool-btn" onclick="toggleEdit()">
+                        ✏️ Edit Mode
+                    </button>
+                    <button class="tool-btn delete" onclick="clearAll()">
+                        🗑️ Clear All
+                    </button>
+                </div>
+            </div>
+
+            <!-- Property Settings -->
+            <div class="property-settings">
+                <h3 class="section-title">⚙️ Property Settings</h3>
+                <div class="input-group">
+                    <label class="input-label">Property Width</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="property-width" value="150" min="10" onchange="updatePropertySize()">
+                        <span>feet</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Property Depth</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="property-depth" value="200" min="10" onchange="updatePropertySize()">
+                        <span>feet</span>
+                    </div>
+                </div>
+                <div class="input-group">
+                    <label class="input-label">Grid Size</label>
+                    <div class="input-with-unit">
+                        <input type="number" id="grid-size" value="10" min="5" max="50" step="5" onchange="updateGrid()">
+                        <span>feet</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Measurements -->
+            <div class="measurements-section">
+                <h3 class="section-title">📏 Measurements</h3>
+                <div class="measurement-grid">
+                    <div class="measurement-item">
+                        <div class="measurement-label">Fence Length</div>
+                        <div class="measurement-value highlight" id="fence-length">0 ft</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Protected Area</div>
+                        <div class="measurement-value" id="protected-area">0 sq ft</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Gates</div>
+                        <div class="measurement-value" id="gates-count">0</div>
+                    </div>
+                    <div class="measurement-item">
+                        <div class="measurement-label">Corners</div>
+                        <div class="measurement-value" id="corners-count">0</div>
+                    </div>
+                </div>
+                <div class="help-tip">
+                    💡 <strong>Tip:</strong> Click to place points. Right-click or press 'C' to close shapes. Drag points in edit mode to adjust.
+                </div>
+            </div>
+
+            <!-- Quote Section -->
+            <div class="quote-section">
+                <div class="price-estimate">
+                    <div class="price-label">Estimated Installation Cost</div>
+                    <div class="price-value" id="price-estimate">$0</div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn primary" onclick="getQuote()">
+                        💰 Get Detailed Quote
+                    </button>
+                    <button class="action-btn secondary" onclick="saveDesign()">
+                        💾 Save Design
+                    </button>
+                    <button class="action-btn secondary" onclick="loadDesign()">
+                        📂 Load Design
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Canvas Container -->
+        <div class="canvas-container">
+            <canvas id="drawingCanvas"></canvas>
+            
+            <!-- Color Legend -->
+            <div class="color-legend">
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(76, 175, 80, 0.3); border-color: #4caf50;"></div>
+                    <div class="legend-label">Property</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(121, 85, 72, 0.5); border-color: #795548;"></div>
+                    <div class="legend-label">House</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(102, 126, 234, 0.3); border-color: #667eea;"></div>
+                    <div class="legend-label">Fence</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="background: rgba(255, 152, 0, 0.5); border-color: #ff9800;"></div>
+                    <div class="legend-label">Obstacles</div>
+                </div>
+            </div>
+            
+            <!-- Canvas Controls -->
+            <div class="canvas-controls">
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="showGrid" checked onchange="toggleGrid()">
+                        Show Grid
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="showDimensions" checked onchange="toggleDimensions()">
+                        Show Dimensions
+                    </label>
+                </div>
+                <div class="control-group">
+                    <label>
+                        <input type="checkbox" id="snapToGrid" checked>
+                        Snap to Grid
+                    </label>
+                </div>
+            </div>
+            
+            <div class="canvas-instructions">
+                <span id="instructions">Click to place property boundary points • Right-click to complete</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('drawingCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Drawing state
+        let currentMode = 'property';
+        let isDrawing = false;
+        let isEditing = false;
+        let currentPoints = [];
+        let selectedPoint = null;
+        let dragOffset = { x: 0, y: 0 };
+        
+        // Property data
+        let propertyData = {
+            property: { points: [], closed: false },
+            house: { points: [], closed: false },
+            fence: { points: [], closed: false },
+            obstacles: [],
+            gates: []
+        };
+        
+        // Settings
+        let showGrid = true;
+        let showDimensions = true;
+        let snapToGrid = true;
+        let gridSize = 10; // feet
+        let pixelsPerFoot = 4; // Scale factor
+        let propertyWidth = 150; // feet
+        let propertyDepth = 200; // feet
+        
+        // Pricing
+        const PRICE_PER_FOOT = 15;
+        const GATE_PRICE = 250;
+        const CORNER_CHARGE = 25;
+        
+        // Colors
+        const colors = {
+            property: { fill: 'rgba(76, 175, 80, 0.3)', stroke: '#4caf50' },
+            house: { fill: 'rgba(121, 85, 72, 0.5)', stroke: '#795548' },
+            fence: { fill: 'rgba(102, 126, 234, 0.3)', stroke: '#667eea' },
+            obstacles: { fill: 'rgba(255, 152, 0, 0.5)', stroke: '#ff9800' },
+            gate: { fill: '#ff9800', stroke: '#f57c00' }
+        };
+        
+        // Initialize canvas
+        function initCanvas() {
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+            
+            canvas.addEventListener('mousedown', handleMouseDown);
+            canvas.addEventListener('mousemove', handleMouseMove);
+            canvas.addEventListener('mouseup', handleMouseUp);
+            canvas.addEventListener('contextmenu', handleRightClick);
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'c' || e.key === 'C') {
+                    closeCurrentShape();
+                }
+                if (e.key === 'Escape') {
+                    cancelCurrentDrawing();
+                }
+            });
+            
+            drawCanvas();
+        }
+        
+        // Resize canvas
+        function resizeCanvas() {
+            const container = document.querySelector('.canvas-container');
+            canvas.width = container.offsetWidth;
+            canvas.height = container.offsetHeight;
+            
+            // Calculate scale to fit property
+            const maxWidth = canvas.width - 100;
+            const maxHeight = canvas.height - 100;
+            pixelsPerFoot = Math.min(maxWidth / propertyWidth, maxHeight / propertyDepth);
+            
+            drawCanvas();
+        }
+        
+        // Convert feet to pixels
+        function feetToPixels(feet) {
+            return feet * pixelsPerFoot;
+        }
+        
+        // Convert pixels to feet
+        function pixelsToFeet(pixels) {
+            return pixels / pixelsPerFoot;
+        }
+        
+        // Snap to grid
+        function snapToGridPoint(x, y) {
+            if (!snapToGrid) return { x, y };
+            
+            const gridSizePixels = feetToPixels(gridSize);
+            return {
+                x: Math.round(x / gridSizePixels) * gridSizePixels,
+                y: Math.round(y / gridSizePixels) * gridSizePixels
+            };
+        }
+        
+        // Handle mouse down
+        function handleMouseDown(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            const point = snapToGridPoint(x, y);
+            
+            if (isEditing) {
+                // Check if clicking on existing point
+                selectedPoint = findNearestPoint(x, y);
+                if (selectedPoint) {
+                    dragOffset = {
+                        x: x - selectedPoint.point.x,
+                        y: y - selectedPoint.point.y
+                    };
+                }
+            } else if (!propertyData[currentMode].closed || currentMode === 'obstacles') {
+                // Add new point
+                if (currentMode === 'obstacles') {
+                    // Obstacles are individual shapes
+                    if (currentPoints.length === 0) {
+                        isDrawing = true;
+                    }
+                    currentPoints.push(point);
+                } else {
+                    propertyData[currentMode].points.push(point);
+                    isDrawing = true;
+                }
+                drawCanvas();
+                updateMeasurements();
+            }
+        }
+        
+        // Handle mouse move
+        function handleMouseMove(e) {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            
+            if (selectedPoint && isEditing) {
+                // Drag point
+                const point = snapToGridPoint(x - dragOffset.x, y - dragOffset.y);
+                selectedPoint.point.x = point.x;
+                selectedPoint.point.y = point.y;
+                drawCanvas();
+                updateMeasurements();
+            } else if (isDrawing) {
+                // Preview line
+                drawCanvas();
+                ctx.strokeStyle = colors[currentMode].stroke;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                
+                const points = currentMode === 'obstacles' ? currentPoints : propertyData[currentMode].points;
+                if (points.length > 0) {
+                    const lastPoint = points[points.length - 1];
+                    ctx.moveTo(lastPoint.x, lastPoint.y);
+                    const previewPoint = snapToGridPoint(x, y);
+                    ctx.lineTo(previewPoint.x, previewPoint.y);
+                    ctx.stroke();
+                }
+                ctx.setLineDash([]);
+            }
+        }
+        
+        // Handle mouse up
+        function handleMouseUp(e) {
+            selectedPoint = null;
+        }
+        
+        // Handle right click
+        function handleRightClick(e) {
+            e.preventDefault();
+            closeCurrentShape();
+        }
+        
+        // Close current shape
+        function closeCurrentShape() {
+            if (currentMode === 'obstacles' && currentPoints.length > 2) {
+                propertyData.obstacles.push({ points: [...currentPoints], closed: true });
+                currentPoints = [];
+                isDrawing = false;
+            } else if (propertyData[currentMode].points.length > 2) {
+                propertyData[currentMode].closed = true;
+                isDrawing = false;
+                
+                // Auto-advance to next step
+                if (currentMode === 'property') {
+                    setDrawingMode('house');
+                } else if (currentMode === 'house') {
+                    setDrawingMode('fence');
+                }
+            }
+            drawCanvas();
+            updateMeasurements();
+        }
+        
+        // Cancel current drawing
+        function cancelCurrentDrawing() {
+            if (currentMode === 'obstacles') {
+                currentPoints = [];
+            } else {
+                propertyData[currentMode].points = [];
+                propertyData[currentMode].closed = false;
+            }
+            isDrawing = false;
+            drawCanvas();
+            updateMeasurements();
+        }
+        
+        // Find nearest point
+        function findNearestPoint(x, y) {
+            const threshold = 10;
+            
+            for (const mode of ['property', 'house', 'fence']) {
+                const points = propertyData[mode].points;
+                for (let i = 0; i < points.length; i++) {
+                    const dist = Math.sqrt(Math.pow(x - points[i].x, 2) + Math.pow(y - points[i].y, 2));
+                    if (dist < threshold) {
+                        return { mode, index: i, point: points[i] };
+                    }
+                }
+            }
+            
+            return null;
+        }
+        
+        // Draw canvas
+        function drawCanvas() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw grid
+            if (showGrid) {
+                drawGrid();
+            }
+            
+            // Draw shapes in order
+            drawShape('property');
+            drawShape('house');
+            
+            // Draw obstacles
+            for (const obstacle of propertyData.obstacles) {
+                drawPolygon(obstacle.points, colors.obstacles, true);
+            }
+            
+            // Draw current obstacle being drawn
+            if (currentMode === 'obstacles' && currentPoints.length > 0) {
+                drawPolygon(currentPoints, colors.obstacles, false);
+            }
+            
+            drawShape('fence');
+            
+            // Draw gates
+            for (const gate of propertyData.gates) {
+                ctx.fillStyle = colors.gate.fill;
+                ctx.strokeStyle = colors.gate.stroke;
+                ctx.lineWidth = 2;
+                ctx.fillRect(gate.x - 8, gate.y - 8, 16, 16);
+                ctx.strokeRect(gate.x - 8, gate.y - 8, 16, 16);
+                
+                ctx.fillStyle = 'white';
+                ctx.font = 'bold 12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('G', gate.x, gate.y);
+            }
+            
+            // Draw dimensions
+            if (showDimensions) {
+                drawDimensions();
+            }
+        }
+        
+        // Draw shape
+        function drawShape(mode) {
+            const data = propertyData[mode];
+            if (data.points.length > 0) {
+                drawPolygon(data.points, colors[mode], data.closed);
+            }
+        }
+        
+        // Draw polygon
+        function drawPolygon(points, color, closed) {
+            if (points.length < 2) return;
+            
+            ctx.strokeStyle = color.stroke;
+            ctx.fillStyle = color.fill;
+            ctx.lineWidth = 3;
+            
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(points[i].x, points[i].y);
+            }
+            
+            if (closed) {
+                ctx.closePath();
+                ctx.fill();
+            }
+            ctx.stroke();
+            
+            // Draw points
+            for (const point of points) {
+                ctx.fillStyle = color.stroke;
+                ctx.beginPath();
+                ctx.arc(point.x, point.y, 5, 0, 2 * Math.PI);
+                ctx.fill();
+            }
+        }
+        
+        // Draw grid
+        function drawGrid() {
+            const gridSizePixels = feetToPixels(gridSize);
+            ctx.strokeStyle = '#e0e0e0';
+            ctx.lineWidth = 1;
+            
+            for (let x = 0; x < canvas.width; x += gridSizePixels) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, canvas.height);
+                ctx.stroke();
+            }
+            
+            for (let y = 0; y < canvas.height; y += gridSizePixels) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(canvas.width, y);
+                ctx.stroke();
+            }
+            
+            // Draw scale
+            ctx.fillStyle = '#666';
+            ctx.font = '12px Arial';
+            ctx.fillText(`Grid: ${gridSize} ft`, 10, canvas.height - 10);
+        }
+        
+        // Draw dimensions
+        function drawDimensions() {
+            // Draw fence dimensions
+            if (propertyData.fence.points.length > 1) {
+                for (let i = 0; i < propertyData.fence.points.length - 1; i++) {
+                    const p1 = propertyData.fence.points[i];
+                    const p2 = propertyData.fence.points[i + 1];
+                    drawDimensionLine(p1, p2);
+                }
+                
+                if (propertyData.fence.closed) {
+                    const p1 = propertyData.fence.points[propertyData.fence.points.length - 1];
+                    const p2 = propertyData.fence.points[0];
+                    drawDimensionLine(p1, p2);
+                }
+            }
+        }
+        
+        // Draw dimension line
+        function drawDimensionLine(p1, p2) {
+            const dist = Math.sqrt(Math.pow(p2.x - p1.x, 2) + Math.pow(p2.y - p1.y, 2));
+            const feet = Math.round(pixelsToFeet(dist));
+            
+            const midX = (p1.x + p2.x) / 2;
+            const midY = (p1.y + p2.y) / 2;
+            
+            ctx.fillStyle = 'white';
+            ctx.fillRect(midX - 20, midY - 10, 40, 20);
+            
+            ctx.fillStyle = '#333';
+            ctx.font = 'bold 12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(`${feet} ft`, midX, midY);
+        }
+        
+        // Calculate perimeter
+        function calculatePerimeter(points, closed) {
+            if (points.length < 2) return 0;
+            
+            let perimeter = 0;
+            for (let i = 0; i < points.length - 1; i++) {
+                const dist = Math.sqrt(
+                    Math.pow(points[i + 1].x - points[i].x, 2) +
+                    Math.pow(points[i + 1].y - points[i].y, 2)
+                );
+                perimeter += dist;
+            }
+            
+            if (closed && points.length > 2) {
+                const dist = Math.sqrt(
+                    Math.pow(points[0].x - points[points.length - 1].x, 2) +
+                    Math.pow(points[0].y - points[points.length - 1].y, 2)
+                );
+                perimeter += dist;
+            }
+            
+            return pixelsToFeet(perimeter);
+        }
+        
+        // Calculate area
+        function calculateArea(points) {
+            if (points.length < 3) return 0;
+            
+            let area = 0;
+            for (let i = 0; i < points.length; i++) {
+                const j = (i + 1) % points.length;
+                area += points[i].x * points[j].y;
+                area -= points[j].x * points[i].y;
+            }
+            
+            const pixelArea = Math.abs(area / 2);
+            return pixelsToFeet(pixelArea) * pixelsToFeet(1); // Convert to square feet
+        }
+        
+        // Update measurements
+        function updateMeasurements() {
+            const fenceLength = calculatePerimeter(propertyData.fence.points, propertyData.fence.closed);
+            const protectedArea = calculateArea(propertyData.fence.points);
+            const corners = propertyData.fence.points.length;
+            const gates = propertyData.gates.length;
+            
+            document.getElementById('fence-length').textContent = Math.round(fenceLength) + ' ft';
+            document.getElementById('protected-area').textContent = Math.round(protectedArea) + ' sq ft';
+            document.getElementById('corners-count').textContent = corners;
+            document.getElementById('gates-count').textContent = gates;
+            
+            // Calculate price
+            const basePrice = Math.round(fenceLength * PRICE_PER_FOOT);
+            const gatePrice = gates * GATE_PRICE;
+            const cornerPrice = corners * CORNER_CHARGE;
+            const totalPrice = basePrice + gatePrice + cornerPrice;
+            
+            document.getElementById('price-estimate').textContent = '$' + totalPrice.toLocaleString();
+            
+            // Store data
+            window.designData = {
+                fenceLength: Math.round(fenceLength),
+                protectedArea: Math.round(protectedArea),
+                corners,
+                gates,
+                price: totalPrice,
+                propertyData: propertyData
+            };
+        }
+        
+        // Set drawing mode
+        function setDrawingMode(mode) {
+            currentMode = mode;
+            isDrawing = false;
+            currentPoints = [];
+            
+            // Update UI
+            document.querySelectorAll('.mode-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById(mode + '-mode').classList.add('active');
+            
+            // Update steps
+            document.querySelectorAll('.step').forEach(step => step.classList.remove('active'));
+            if (mode === 'property') {
+                document.getElementById('step-1').classList.add('active');
+            } else if (mode === 'house') {
+                document.getElementById('step-1').classList.add('completed');
+                document.getElementById('step-2').classList.add('active');
+            } else if (mode === 'fence') {
+                document.getElementById('step-1').classList.add('completed');
+                document.getElementById('step-2').classList.add('completed');
+                document.getElementById('step-3').classList.add('active');
+            }
+            
+            // Update instructions
+            const instructions = {
+                property: 'Click to place property boundary points • Right-click to complete',
+                house: 'Click to place house outline points • Right-click to complete',
+                fence: 'Click to place fence points • Right-click to complete',
+                obstacles: 'Click to draw obstacles (trees, pools, etc.) • Right-click to complete each'
+            };
+            document.getElementById('instructions').textContent = instructions[mode];
+            
+            canvas.style.cursor = isEditing ? 'pointer' : 'crosshair';
+        }
+        
+        // Toggle edit mode
+        function toggleEdit() {
+            isEditing = !isEditing;
+            canvas.style.cursor = isEditing ? 'pointer' : 'crosshair';
+            document.getElementById('instructions').textContent = isEditing ? 
+                'Click and drag points to adjust • Click Edit Mode to exit' :
+                'Click to place points • Right-click to complete';
+        }
+        
+        // Add gate
+        function addGate() {
+            if (propertyData.fence.points.length < 2) {
+                alert('Please draw a fence first!');
+                return;
+            }
+            
+            document.getElementById('instructions').textContent = 'Click on the fence line to place a gate';
+            
+            const handleGatePlacement = (e) => {
+                const rect = canvas.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                propertyData.gates.push({ x, y });
+                drawCanvas();
+                updateMeasurements();
+                
+                canvas.removeEventListener('click', handleGatePlacement);
+                document.getElementById('instructions').textContent = 'Gate placed! Continue drawing or editing.';
+            };
+            
+            canvas.addEventListener('click', handleGatePlacement);
+        }
+        
+        // Undo last
+        function undoLast() {
+            if (currentMode === 'obstacles' && currentPoints.length > 0) {
+                currentPoints.pop();
+            } else if (propertyData[currentMode].points.length > 0) {
+                propertyData[currentMode].points.pop();
+                if (propertyData[currentMode].points.length < 3) {
+                    propertyData[currentMode].closed = false;
+                }
+            }
+            drawCanvas();
+            updateMeasurements();
+        }
+        
+        // Clear all
+        function clearAll() {
+            if (confirm('Clear all drawings? This cannot be undone.')) {
+                propertyData = {
+                    property: { points: [], closed: false },
+                    house: { points: [], closed: false },
+                    fence: { points: [], closed: false },
+                    obstacles: [],
+                    gates: []
+                };
+                currentPoints = [];
+                isDrawing = false;
+                setDrawingMode('property');
+                drawCanvas();
+                updateMeasurements();
+            }
+        }
+        
+        // Toggle grid
+        function toggleGrid() {
+            showGrid = document.getElementById('showGrid').checked;
+            drawCanvas();
+        }
+        
+        // Toggle dimensions
+        function toggleDimensions() {
+            showDimensions = document.getElementById('showDimensions').checked;
+            drawCanvas();
+        }
+        
+        // Update property size
+        function updatePropertySize() {
+            propertyWidth = parseInt(document.getElementById('property-width').value);
+            propertyDepth = parseInt(document.getElementById('property-depth').value);
+            resizeCanvas();
+        }
+        
+        // Update grid
+        function updateGrid() {
+            gridSize = parseInt(document.getElementById('grid-size').value);
+            snapToGrid = document.getElementById('snapToGrid').checked;
+            drawCanvas();
+        }
+        
+        // Get quote
+        function getQuote() {
+            if (!window.designData || window.designData.fenceLength === 0) {
+                alert('Please complete your fence design first!');
+                return;
+            }
+            
+            localStorage.setItem('propertyDesign', JSON.stringify(window.designData));
+            alert(`Design Summary:\n\nFence Length: ${window.designData.fenceLength} ft\nProtected Area: ${window.designData.protectedArea} sq ft\nGates: ${window.designData.gates}\n\nEstimated Cost: $${window.designData.price.toLocaleString()}\n\nClick OK to proceed to detailed quote.`);
+            window.location.href = '/quote-generator.html?length=' + window.designData.fenceLength;
+        }
+        
+        // Save design
+        function saveDesign() {
+            if (!window.designData) {
+                alert('Please create a design first!');
+                return;
+            }
+            
+            const dataStr = JSON.stringify(window.designData, null, 2);
+            const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+            
+            const exportFileDefaultName = 'property-design-' + Date.now() + '.json';
+            
+            const linkElement = document.createElement('a');
+            linkElement.setAttribute('href', dataUri);
+            linkElement.setAttribute('download', exportFileDefaultName);
+            linkElement.click();
+            
+            alert('Design saved! You can share this file with our team.');
+        }
+        
+        // Load design
+        function loadDesign() {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                const reader = new FileReader();
+                
+                reader.onload = (event) => {
+                    try {
+                        const data = JSON.parse(event.target.result);
+                        if (data.propertyData) {
+                            propertyData = data.propertyData;
+                            drawCanvas();
+                            updateMeasurements();
+                            alert('Design loaded successfully!');
+                        }
+                    } catch (error) {
+                        alert('Error loading design file.');
+                    }
+                };
+                
+                reader.readAsText(file);
+            };
+            
+            input.click();
+        }
+        
+        // Initialize
+        window.onload = initCanvas;
+    </script>
+</body>
+</html>
