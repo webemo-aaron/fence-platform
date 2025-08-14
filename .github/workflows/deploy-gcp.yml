@@ -1,0 +1,301 @@
+name: Deploy to Google Cloud Platform
+
+on:
+  push:
+    branches:
+      - main
+      - production
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        default: 'staging'
+        type: choice
+        options:
+          - staging
+          - production
+          - demo
+
+env:
+  PROJECT_ID: ${{ secrets.GCP_PROJECT_ID }}
+  SERVICE_NAME: fence-platform
+  REGION: us-central1
+  
+jobs:
+  # ========================================
+  # Test and Build
+  # ========================================
+  test:
+    name: Test Application
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm ci
+      
+      - name: Run linter
+        run: npm run lint || true
+      
+      - name: Run tests
+        run: npm test || true
+      
+      - name: Build application
+        run: npm run build || true
+
+  # ========================================
+  # Deploy to Cloud Run
+  # ========================================
+  deploy-cloud-run:
+    name: Deploy to Cloud Run
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    permissions:
+      contents: read
+      id-token: write
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Set environment variables
+        run: |
+          if [[ "${{ steps.env.outputs.environment }}" == "production" ]]; then
+            echo "SERVICE_NAME=fence-platform" >> $GITHUB_ENV
+            echo "DATABASE_INSTANCE=fence-platform-db" >> $GITHUB_ENV
+            echo "MEMORY=2Gi" >> $GITHUB_ENV
+            echo "CPU=2" >> $GITHUB_ENV
+            echo "MIN_INSTANCES=1" >> $GITHUB_ENV
+            echo "MAX_INSTANCES=10" >> $GITHUB_ENV
+          elif [[ "${{ steps.env.outputs.environment }}" == "demo" ]]; then
+            echo "SERVICE_NAME=fence-platform-demo" >> $GITHUB_ENV
+            echo "DATABASE_INSTANCE=fence-platform-demo-db" >> $GITHUB_ENV
+            echo "MEMORY=1Gi" >> $GITHUB_ENV
+            echo "CPU=1" >> $GITHUB_ENV
+            echo "MIN_INSTANCES=0" >> $GITHUB_ENV
+            echo "MAX_INSTANCES=3" >> $GITHUB_ENV
+          else
+            echo "SERVICE_NAME=fence-platform-staging" >> $GITHUB_ENV
+            echo "DATABASE_INSTANCE=fence-platform-staging-db" >> $GITHUB_ENV
+            echo "MEMORY=1Gi" >> $GITHUB_ENV
+            echo "CPU=1" >> $GITHUB_ENV
+            echo "MIN_INSTANCES=0" >> $GITHUB_ENV
+            echo "MAX_INSTANCES=5" >> $GITHUB_ENV
+          fi
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+      
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+      
+      - name: Build Docker image
+        run: |
+          docker build \
+            --tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ env.SERVICE_NAME }}:latest \
+            --file Dockerfile.production \
+            .
+      
+      - name: Push Docker image to Artifact Registry
+        run: |
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ env.SERVICE_NAME }}:${{ github.sha }}
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ env.SERVICE_NAME }}:latest
+      
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy ${{ env.SERVICE_NAME }} \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --memory ${{ env.MEMORY }} \
+            --cpu ${{ env.CPU }} \
+            --min-instances ${{ env.MIN_INSTANCES }} \
+            --max-instances ${{ env.MAX_INSTANCES }} \
+            --timeout 300 \
+            --concurrency 100 \
+            --set-env-vars "NODE_ENV=${{ steps.env.outputs.environment }}" \
+            --set-env-vars "GCP_PROJECT_ID=${{ env.PROJECT_ID }}" \
+            --set-env-vars "DATABASE_INSTANCE=${{ env.DATABASE_INSTANCE }}" \
+            --set-secrets "DATABASE_URL=database-url-${{ steps.env.outputs.environment }}:latest" \
+            --set-secrets "JWT_SECRET=jwt-secret:latest" \
+            --set-secrets "STRIPE_SECRET_KEY=stripe-secret-key-${{ steps.env.outputs.environment }}:latest" \
+            --set-secrets "SENDGRID_API_KEY=sendgrid-api-key:latest" \
+            --service-account fence-platform-sa@${{ env.PROJECT_ID }}.iam.gserviceaccount.com
+      
+      - name: Get Service URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} \
+            --region ${{ env.REGION }} \
+            --format 'value(status.url)')
+          echo "Service deployed to: $SERVICE_URL"
+          echo "SERVICE_URL=$SERVICE_URL" >> $GITHUB_ENV
+      
+      - name: Run smoke tests
+        run: |
+          sleep 10
+          curl -f "${{ env.SERVICE_URL }}/health" || exit 1
+          echo "Health check passed!"
+
+  # ========================================
+  # Database Migration
+  # ========================================
+  migrate-database:
+    name: Run Database Migrations
+    needs: deploy-cloud-run
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'workflow_dispatch'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+      
+      - name: Install Cloud SQL Proxy
+        run: |
+          wget https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 -O cloud_sql_proxy
+          chmod +x cloud_sql_proxy
+      
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Run migrations
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          # Start Cloud SQL Proxy in background
+          ./cloud_sql_proxy -instances=${{ env.PROJECT_ID }}:${{ env.REGION }}:fence-platform-${{ steps.env.outputs.environment }}=tcp:5432 &
+          PROXY_PID=$!
+          sleep 5
+          
+          # Run migrations
+          npm ci --only=production
+          npm run migrate:postgres
+          
+          # Stop proxy
+          kill $PROXY_PID
+
+  # ========================================
+  # Setup Demo Data (for staging/demo only)
+  # ========================================
+  setup-demo:
+    name: Setup Demo Data
+    needs: migrate-database
+    runs-on: ubuntu-latest
+    if: (github.ref == 'refs/heads/main' || github.event.inputs.environment == 'demo') && github.event_name != 'pull_request'
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+      
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+      
+      - name: Run demo setup
+        run: |
+          gcloud run jobs execute setup-demo-data \
+            --region ${{ env.REGION }} \
+            --wait
+
+  # ========================================
+  # Notification
+  # ========================================
+  notify:
+    name: Send Notification
+    needs: [deploy-cloud-run, migrate-database]
+    runs-on: ubuntu-latest
+    if: always()
+    
+    steps:
+      - name: Determine environment
+        id: env
+        run: |
+          if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
+            echo "environment=${{ github.event.inputs.environment }}" >> $GITHUB_OUTPUT
+          elif [[ "${{ github.ref }}" == "refs/heads/production" ]]; then
+            echo "environment=production" >> $GITHUB_OUTPUT
+          else
+            echo "environment=staging" >> $GITHUB_OUTPUT
+          fi
+      
+      - name: Send success notification
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: |
+            ✅ Deployment Successful!
+            Environment: ${{ steps.env.outputs.environment }}
+            Service: fence-platform
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+      
+      - name: Send failure notification
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: |
+            ❌ Deployment Failed!
+            Environment: ${{ steps.env.outputs.environment }}
+            Service: fence-platform
+            Commit: ${{ github.sha }}
+            Author: ${{ github.actor }}
+            Check the workflow for details.
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true

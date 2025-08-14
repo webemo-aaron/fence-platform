@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Invisible Fence ROI Calculator</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
             margin: 0;
@@ -29,6 +30,7 @@
             padding: 30px;
             margin-bottom: 30px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            position: relative;
         }
 
         h1 {
@@ -40,6 +42,38 @@
         .subtitle {
             color: #666;
             font-size: 1.1rem;
+        }
+
+        .header-actions {
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s;
+        }
+
+        .header-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .header-btn.primary {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
         }
 
         .dashboard {
@@ -264,6 +298,17 @@
         <header>
             <h1>🚀 Invisible Fence ROI Calculator</h1>
             <p class="subtitle">Event-Driven Automation with Dynamic Pricing Tiers</p>
+            <div class="header-actions">
+                <a href="/property-designer.html" class="header-btn primary">
+                    🏠 Design Fence
+                </a>
+                <a href="/crm-dashboard.html" class="header-btn">
+                    👥 CRM
+                </a>
+                <a href="/ux-showcase.html" class="header-btn">
+                    🎨 All Features
+                </a>
+            </div>
         </header>
 
         <div id="status" class="status" style="display: none;"></div>
@@ -428,6 +473,7 @@
         const API_URL = 'http://localhost:3333/api';
         let currentTier = 'Essentials';
         let eventSource;
+        let comparisonChart = null;
 
         // Initialize event source for real-time updates
         function initEventSource() {
@@ -523,6 +569,10 @@
                 
                 if (!response.ok) throw new Error('Failed to update tier');
                 
+                // Fetch updated calculations and refresh display + chart
+                await fetchCalculations();
+                showStatus(`${currentTier} tier updated`, 'success');
+                
             } catch (error) {
                 showStatus('Failed to update tier', 'error');
                 console.error(error);
@@ -548,6 +598,10 @@
                 });
                 
                 if (!response.ok) throw new Error('Failed to update configuration');
+                
+                // Fetch updated calculations with new config and refresh everything
+                await fetchCalculations();
+                showStatus('Configuration updated successfully', 'success');
                 
             } catch (error) {
                 showStatus('Failed to update configuration', 'error');
@@ -619,11 +673,142 @@
             }
         }
 
+        // Create/Update comparison chart
+        function renderComparisonChart(calculations) {
+            const ctx = document.getElementById('comparison-chart').getContext('2d');
+            
+            // Destroy existing chart if it exists
+            if (comparisonChart) {
+                comparisonChart.destroy();
+            }
+            
+            const tiers = calculations.map(c => c.tier);
+            const monthlyROI = calculations.map(c => c.monthlyROI);
+            const adminSavings = calculations.map(c => c.adminSavings);
+            const travelSavings = calculations.map(c => c.travelSavings);
+            const revenueRecovery = calculations.map(c => c.revenueRecovery);
+            
+            comparisonChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: tiers,
+                    datasets: [
+                        {
+                            label: 'Admin Savings',
+                            data: adminSavings,
+                            backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Travel Savings', 
+                            data: travelSavings,
+                            backgroundColor: 'rgba(72, 187, 120, 0.8)',
+                            borderColor: 'rgba(72, 187, 120, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Revenue Recovery',
+                            data: revenueRecovery,
+                            backgroundColor: 'rgba(245, 101, 101, 0.8)',
+                            borderColor: 'rgba(245, 101, 101, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Total Monthly ROI',
+                            data: monthlyROI,
+                            type: 'line',
+                            backgroundColor: 'rgba(118, 75, 162, 0.2)',
+                            borderColor: 'rgba(118, 75, 162, 1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(118, 75, 162, 1)',
+                            pointBorderColor: 'white',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'ROI Comparison Across Tiers',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
+                            color: '#333'
+                        },
+                        legend: {
+                            position: 'top',
+                            labels: {
+                                usePointStyle: true,
+                                padding: 20,
+                                font: {
+                                    size: 12
+                                }
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0, 0, 0, 0.8)',
+                            titleColor: 'white',
+                            bodyColor: 'white',
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    return context.dataset.label + ': $' + context.parsed.y.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                },
+                                color: '#666'
+                            },
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
+                        },
+                        x: {
+                            ticks: {
+                                color: '#666',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
+                }
+            });
+        }
+
         // Update ROI display
         function updateROIDisplay(calculations) {
             const calc = calculations.find(c => c.tier === currentTier);
             if (!calc) return;
             
+            // Update individual metrics display
             document.getElementById('admin-savings').textContent = `$${calc.adminSavings.toFixed(0)}`;
             document.getElementById('travel-savings').textContent = `$${calc.travelSavings.toFixed(0)}`;
             document.getElementById('revenue-recovery').textContent = `$${calc.revenueRecovery.toFixed(0)}`;
@@ -633,6 +818,9 @@
             document.getElementById('monthly-roi').textContent = `$${calc.monthlyROI.toFixed(0)}`;
             document.getElementById('annual-roi').textContent = `$${calc.annualROI.toFixed(0)}`;
             document.getElementById('payback-period').textContent = `${calc.paybackPeriod.toFixed(1)} months`;
+            
+            // Update comparison chart with all tiers
+            renderComparisonChart(calculations);
         }
 
         // Export data
@@ -661,6 +849,13 @@
             initEventSource();
             fetchCalculations();
             loadTierData(currentTier);
+            
+            // Add event listener for config form to update on input change
+            document.getElementById('config-form').addEventListener('input', debounce(function(e) {
+                if (e.target.type === 'number') {
+                    updateConfiguration();
+                }
+            }, 1000));
         });
     </script>
 </body>

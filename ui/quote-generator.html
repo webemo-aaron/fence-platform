@@ -384,6 +384,11 @@
                 <!-- Property Information -->
                 <div class="form-section">
                     <h3>🏠 Property Details</h3>
+                    <div style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+                        <strong>🎨 Want a more accurate quote?</strong>
+                        <a href="/property-designer.html" style="color: white; text-decoration: underline; margin-left: 10px;">Use our Property Designer</a>
+                        <p style="margin-top: 5px; font-size: 0.9rem; opacity: 0.95;">Draw your exact property layout and fence design for precise pricing</p>
+                    </div>
                     <div class="form-group">
                         <label>Property Type</label>
                         <select id="property_type" required>
@@ -779,6 +784,44 @@
                 alert('There was an error saving your information. Please try again or call us directly.');
             }
         }
+
+        // Check for data from Property Designer
+        window.addEventListener('DOMContentLoaded', () => {
+            // Check URL parameters
+            const urlParams = new URLSearchParams(window.location.search);
+            const fenceLength = urlParams.get('length');
+            const perimeter = urlParams.get('perimeter');
+            
+            // Check localStorage for saved design
+            const savedDesign = localStorage.getItem('propertyDesign');
+            
+            if (savedDesign) {
+                try {
+                    const designData = JSON.parse(savedDesign);
+                    
+                    // Auto-fill form with design data
+                    if (designData.fenceLength) {
+                        document.getElementById('fence_perimeter').value = designData.fenceLength;
+                    }
+                    if (designData.protectedArea) {
+                        document.getElementById('property_size').value = designData.protectedArea;
+                    }
+                    
+                    // Show notification
+                    const notification = document.createElement('div');
+                    notification.style.cssText = 'position: fixed; top: 20px; right: 20px; background: #48bb78; color: white; padding: 15px; border-radius: 8px; z-index: 1000; box-shadow: 0 4px 12px rgba(0,0,0,0.2);';
+                    notification.innerHTML = '✅ Property design loaded successfully!';
+                    document.body.appendChild(notification);
+                    
+                    setTimeout(() => notification.remove(), 3000);
+                } catch (e) {
+                    console.error('Error loading design:', e);
+                }
+            } else if (fenceLength || perimeter) {
+                // Use URL parameters if available
+                document.getElementById('fence_perimeter').value = fenceLength || perimeter;
+            }
+        });
     </script>
 </body>
 </html>

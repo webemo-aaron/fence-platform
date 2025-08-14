@@ -1,0 +1,70 @@
+# Multi-stage build for production
+FROM node:18-alpine AS builder
+
+# Install build dependencies
+RUN apk add --no-cache python3 make g++
+
+WORKDIR /app
+
+# Copy package files
+COPY package-multi-tenant.json ./package.json
+COPY package-lock.json ./
+
+# Install all dependencies (including dev)
+RUN npm ci
+
+# Copy source code
+COPY . .
+
+# Build TypeScript if needed
+RUN if [ -f "tsconfig.json" ]; then npm run build; fi
+
+# Production stage
+FROM node:18-alpine
+
+# Install production dependencies only
+RUN apk add --no-cache \
+    curl \
+    postgresql-client \
+    tini
+
+# Create non-root user
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+
+WORKDIR /app
+
+# Copy package files
+COPY package-multi-tenant.json ./package.json
+COPY package-lock.json ./
+
+# Install production dependencies only
+RUN npm ci --only=production && \
+    npm cache clean --force
+
+# Copy application files
+COPY --from=builder /app/server-multi-tenant.js ./
+COPY --from=builder /app/services ./services
+COPY --from=builder /app/middleware ./middleware
+COPY --from=builder /app/migrations ./migrations
+COPY --from=builder /app/ui ./ui
+
+# Create necessary directories
+RUN mkdir -p data logs backups && \
+    chown -R nodejs:nodejs /app
+
+# Switch to non-root user
+USER nodejs
+
+# Expose port
+EXPOSE 3000
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:3000/health || exit 1
+
+# Use tini for proper signal handling
+ENTRYPOINT ["/sbin/tini", "--"]
+
+# Start application
+CMD ["node", "server-multi-tenant.js"]

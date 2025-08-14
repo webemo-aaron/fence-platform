@@ -1,0 +1,76 @@
+{
+  "name": "fence-platform-multi-tenant",
+  "version": "2.0.0",
+  "description": "Multi-tenant fence business management platform with ROI automation",
+  "main": "server-multi-tenant.js",
+  "scripts": {
+    "start": "node server-multi-tenant.js",
+    "start:dev": "nodemon server-multi-tenant.js",
+    "start:production": "NODE_ENV=production node server-multi-tenant.js",
+    "migrate": "node migrations/run-migrations.js",
+    "migrate:postgres": "psql $DATABASE_URL < migrations/001-multi-tenant-postgres.sql",
+    "test": "jest",
+    "test:integration": "jest --testPathPattern=integration",
+    "lint": "eslint src/**/*.js",
+    "build": "tsc",
+    "setup": "npm install && npm run migrate",
+    "dev": "concurrently \"npm run start:dev\" \"npm run watch:ui\"",
+    "watch:ui": "live-server ui --port=9090",
+    "backup": "pg_dump $DATABASE_URL > backups/backup-$(date +%Y%m%d).sql",
+    "restore": "psql $DATABASE_URL < backups/latest.sql"
+  },
+  "keywords": [
+    "multi-tenant",
+    "saas",
+    "fence",
+    "crm",
+    "roi-calculator",
+    "business-management"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.7.0",
+    "helmet": "^7.0.0",
+    "jsonwebtoken": "^9.0.0",
+    "nodemailer": "^6.9.1",
+    "pg": "^8.10.0",
+    "stripe": "^12.0.0",
+    "uuid": "^9.0.0",
+    "redis": "^4.6.5",
+    "bull": "^4.10.4",
+    "winston": "^3.8.2",
+    "compression": "^1.7.4",
+    "express-validator": "^7.0.1",
+    "multer": "^1.4.5-lts.1",
+    "xlsx": "^0.18.5",
+    "csv-parse": "^5.5.0",
+    "node-quickbooks": "^2.0.39",
+    "@google-cloud/vision": "^3.1.4"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "@types/express": "^4.17.17",
+    "@types/jest": "^29.5.0",
+    "jest": "^29.5.0",
+    "nodemon": "^2.0.22",
+    "supertest": "^6.3.3",
+    "eslint": "^8.40.0",
+    "typescript": "^5.0.4",
+    "concurrently": "^8.0.1",
+    "live-server": "^1.2.2"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "optionalDependencies": {
+    "puppeteer": "^20.0.0",
+    "chart.js": "^4.3.0",
+    "xlsx": "^0.18.5"
+  }
+}

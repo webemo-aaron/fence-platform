@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const { EventEmitter } = require('eventemitter3');
+require('dotenv').config();
 
 const app = express();
 app.use(cors());
@@ -89,6 +90,21 @@ app.get('/api/status', (req, res) => {
     initialized: true,
     tiers: Object.keys(tierData),
     message: 'Invisible Fence ROI Calculator API is running'
+  });
+});
+
+// Google Maps API Configuration endpoint
+app.get('/api/maps-config', (req, res) => {
+  const apiKey = process.env.GOOGLE_MAPS_API_KEY || '';
+  const isConfigured = apiKey && apiKey !== 'YOUR_API_KEY_HERE';
+  
+  res.json({
+    configured: isConfigured,
+    apiKey: isConfigured ? apiKey : null,
+    libraries: ['drawing', 'places', 'geometry'],
+    defaultCenter: { lat: 32.7767, lng: -96.7970 }, // Dallas
+    defaultZoom: 18,
+    message: isConfigured ? 'Google Maps API configured' : 'Google Maps API key not configured. Please set GOOGLE_MAPS_API_KEY in .env file'
   });
 });
 

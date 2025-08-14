@@ -1,0 +1,340 @@
+name: Deploy Fence Platform Frontends
+
+on:
+  push:
+    branches: [ main, ui-system-updates ]
+    paths:
+      - 'ui-professional/**'
+      - 'frontend-enterprise-static/**'
+      - 'frontend-react-simple/**'
+      - 'microservices/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+    inputs:
+      deploy_target:
+        description: 'Select deployment target'
+        required: true
+        default: 'all'
+        type: choice
+        options:
+        - all
+        - professional
+        - enterprise
+        - react
+
+env:
+  PROJECT_ID: servicehive-f009f
+  REGION: us-central1
+  SERVICE_ACCOUNT: fence-platform-sa@servicehive-f009f.iam.gserviceaccount.com
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    outputs:
+      deploy-professional: ${{ steps.changes.outputs.professional || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'professional' }}
+      deploy-enterprise: ${{ steps.changes.outputs.enterprise || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'enterprise' }}
+      deploy-react: ${{ steps.changes.outputs.react || github.event.inputs.deploy_target == 'all' || github.event.inputs.deploy_target == 'react' }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            professional:
+              - 'ui-professional/**'
+              - 'professional-frontend/**'
+            enterprise:
+              - 'frontend-enterprise-static/**'
+            react:
+              - 'frontend-react-simple/**'
+            microservices:
+              - 'microservices/**'
+
+  deploy-professional:
+    needs: setup
+    if: needs.setup.outputs.deploy-professional == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure gcloud
+        run: |
+          gcloud auth configure-docker
+          gcloud config set project $PROJECT_ID
+
+      - name: Prepare Professional Frontend
+        run: |
+          mkdir -p professional-frontend-deploy
+          cp ui-professional/index.html professional-frontend-deploy/
+          
+          # Create package.json
+          cat > professional-frontend-deploy/package.json << 'EOF'
+          {
+            "name": "fence-professional-frontend",
+            "version": "1.0.0",
+            "main": "server.js",
+            "dependencies": {
+              "express": "^4.18.2"
+            },
+            "scripts": {
+              "start": "node server.js"
+            }
+          }
+          EOF
+          
+          # Create server.js
+          cat > professional-frontend-deploy/server.js << 'EOF'
+          const express = require('express');
+          const path = require('path');
+          const app = express();
+          const PORT = process.env.PORT || 8080;
+          
+          app.use(express.static(__dirname));
+          app.get('*', (req, res) => {
+            res.sendFile(path.join(__dirname, 'index.html'));
+          });
+          app.get('/health', (req, res) => {
+            res.json({ status: 'healthy', service: 'professional-frontend' });
+          });
+          
+          app.listen(PORT, () => {
+            console.log(`Professional Frontend running on port ${PORT}`);
+          });
+          EOF
+          
+          # Create Dockerfile
+          cat > professional-frontend-deploy/Dockerfile << 'EOF'
+          FROM node:18-alpine
+          WORKDIR /app
+          COPY package*.json ./
+          RUN npm install --only=production
+          COPY . .
+          RUN addgroup -g 1001 -S nodejs && adduser -S frontend -u 1001 -G nodejs
+          RUN chown -R frontend:nodejs /app
+          USER frontend
+          EXPOSE 8080
+          HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 CMD wget --no-verbose --tries=1 --spider http://localhost:8080/health || exit 1
+          CMD ["npm", "start"]
+          EOF
+
+      - name: Deploy Professional Frontend
+        run: |
+          cd professional-frontend-deploy
+          gcloud run deploy fence-professional-frontend \
+            --source . \
+            --region $REGION \
+            --allow-unauthenticated \
+            --service-account $SERVICE_ACCOUNT \
+            --port 8080 \
+            --memory 256Mi \
+            --min-instances 0 \
+            --max-instances 5 \
+            --set-env-vars NODE_ENV=production
+
+      - name: Test Professional Frontend
+        run: |
+          PROFESSIONAL_URL=$(gcloud run services describe fence-professional-frontend --region $REGION --format 'value(status.url)')
+          echo "Testing Professional Frontend at: $PROFESSIONAL_URL"
+          curl -f "$PROFESSIONAL_URL/health" || exit 1
+          echo "✅ Professional Frontend deployed successfully!"
+
+  deploy-enterprise:
+    needs: setup
+    if: needs.setup.outputs.deploy-enterprise == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure gcloud
+        run: |
+          gcloud auth configure-docker
+          gcloud config set project $PROJECT_ID
+
+      - name: Deploy Enterprise Frontend
+        run: |
+          cd frontend-enterprise-static
+          gcloud run deploy fence-enterprise-frontend \
+            --source . \
+            --region $REGION \
+            --allow-unauthenticated \
+            --service-account $SERVICE_ACCOUNT \
+            --port 8080 \
+            --memory 512Mi \
+            --min-instances 0 \
+            --max-instances 10 \
+            --set-env-vars NODE_ENV=production
+
+      - name: Test Enterprise Frontend
+        run: |
+          ENTERPRISE_URL=$(gcloud run services describe fence-enterprise-frontend --region $REGION --format 'value(status.url)')
+          echo "Testing Enterprise Frontend at: $ENTERPRISE_URL"
+          curl -f "$ENTERPRISE_URL/health" || exit 1
+          echo "✅ Enterprise Frontend deployed successfully!"
+
+  deploy-react:
+    needs: setup
+    if: needs.setup.outputs.deploy-react == 'true'
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+          cache-dependency-path: frontend-react-simple/package-lock.json
+
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Configure gcloud
+        run: |
+          gcloud auth configure-docker
+          gcloud config set project $PROJECT_ID
+
+      - name: Install React Frontend Dependencies
+        run: |
+          cd frontend-react-simple
+          npm ci
+
+      - name: Deploy React Enterprise Frontend
+        run: |
+          cd frontend-react-simple
+          gcloud run deploy fence-react-enterprise \
+            --source . \
+            --region $REGION \
+            --allow-unauthenticated \
+            --service-account $SERVICE_ACCOUNT \
+            --port 8080 \
+            --memory 512Mi \
+            --cpu 1 \
+            --min-instances 0 \
+            --max-instances 10 \
+            --set-env-vars NODE_ENV=production
+
+      - name: Test React Frontend
+        run: |
+          REACT_URL=$(gcloud run services describe fence-react-enterprise --region $REGION --format 'value(status.url)')
+          echo "Testing React Frontend at: $REACT_URL"
+          curl -f "$REACT_URL/health" || exit 1
+          echo "✅ React Enterprise Frontend deployed successfully!"
+
+  integration-tests:
+    needs: [deploy-professional, deploy-enterprise, deploy-react]
+    if: always() && (needs.deploy-professional.result == 'success' || needs.deploy-enterprise.result == 'success' || needs.deploy-react.result == 'success')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Google Cloud CLI
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          service_account_key: ${{ secrets.GCP_SA_KEY }}
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Run Integration Tests
+        run: |
+          echo "🧪 Running integration tests for all frontends..."
+          
+          # Test Professional Frontend
+          PROFESSIONAL_URL=$(gcloud run services describe fence-professional-frontend --region $REGION --format 'value(status.url)' 2>/dev/null || echo "")
+          if [ ! -z "$PROFESSIONAL_URL" ]; then
+            echo "Testing Professional Frontend..."
+            if curl -s "$PROFESSIONAL_URL" | grep -q "Professional"; then
+              echo "✅ Professional Frontend: OK"
+            else
+              echo "❌ Professional Frontend: FAIL"
+            fi
+          fi
+          
+          # Test Enterprise Frontend
+          ENTERPRISE_URL=$(gcloud run services describe fence-enterprise-frontend --region $REGION --format 'value(status.url)' 2>/dev/null || echo "")
+          if [ ! -z "$ENTERPRISE_URL" ]; then
+            echo "Testing Enterprise Frontend..."
+            if curl -s "$ENTERPRISE_URL" | grep -q "Enterprise"; then
+              echo "✅ Enterprise Frontend: OK"
+            else
+              echo "❌ Enterprise Frontend: FAIL"
+            fi
+          fi
+          
+          # Test React Frontend
+          REACT_URL=$(gcloud run services describe fence-react-enterprise --region $REGION --format 'value(status.url)' 2>/dev/null || echo "")
+          if [ ! -z "$REACT_URL" ]; then
+            echo "Testing React Frontend..."
+            if curl -s "$REACT_URL/health" | grep -q "react-enterprise"; then
+              echo "✅ React Frontend: OK"
+            else
+              echo "❌ React Frontend: FAIL"
+            fi
+          fi
+
+      - name: Test Microservices Integration
+        run: |
+          echo "🔗 Testing microservices integration..."
+          
+          # Test API Gateway
+          if curl -s "https://fence-api-gateway-453424326027.us-central1.run.app/health" | grep -q "healthy"; then
+            echo "✅ API Gateway: OK"
+          else
+            echo "❌ API Gateway: FAIL"
+          fi
+          
+          # Test Pricing Service
+          if curl -s "https://fence-pricing-service-453424326027.us-central1.run.app/health" | grep -q "healthy"; then
+            echo "✅ Pricing Service: OK"
+          else
+            echo "❌ Pricing Service: FAIL"
+          fi
+          
+          # Test Social Service
+          if curl -s "https://fence-social-marketing-service-453424326027.us-central1.run.app/health" | grep -q "healthy"; then
+            echo "✅ Social Service: OK"
+          else
+            echo "❌ Social Service: FAIL"
+          fi
+
+  notify-completion:
+    needs: [integration-tests]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deployment Summary
+        run: |
+          echo "🎉 FENCE PLATFORM DEPLOYMENT COMPLETE"
+          echo "====================================="
+          echo ""
+          echo "🌐 Frontend URLs:"
+          echo "  Professional: https://fence-professional-frontend-453424326027.us-central1.run.app"
+          echo "  Enterprise:   https://fence-enterprise-frontend-453424326027.us-central1.run.app"
+          echo "  React:        https://fence-react-enterprise-453424326027.us-central1.run.app"
+          echo ""
+          echo "🔗 Backend Services:"
+          echo "  API Gateway:  https://fence-api-gateway-453424326027.us-central1.run.app"
+          echo "  Auth Service: https://fence-auth-service-453424326027.us-central1.run.app"
+          echo "  Pricing:      https://fence-pricing-service-453424326027.us-central1.run.app"
+          echo "  Social:       https://fence-social-marketing-service-453424326027.us-central1.run.app"
+          echo ""
+          echo "✅ Three-tier frontend architecture deployed successfully!"

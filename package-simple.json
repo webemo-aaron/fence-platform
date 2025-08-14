@@ -1,0 +1,16 @@
+{
+  "name": "fence-api-gateway-simple",
+  "version": "1.0.0",
+  "description": "Simple API Gateway for Fence Platform",
+  "main": "api-gateway-simple.js",
+  "scripts": {
+    "start": "node api-gateway-simple.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "axios": "^1.6.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

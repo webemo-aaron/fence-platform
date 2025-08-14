@@ -174,6 +174,67 @@ class DatabaseService {
         notes TEXT,
         FOREIGN KEY (lead_id) REFERENCES leads(id),
         FOREIGN KEY (stage_id) REFERENCES pipeline_stages(id)
+      )`,
+      
+      // Approval rules table
+      `CREATE TABLE IF NOT EXISTS approval_rules (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        rule_name TEXT NOT NULL,
+        rule_type TEXT NOT NULL,
+        threshold_value REAL,
+        threshold_percentage REAL,
+        approval_level TEXT NOT NULL,
+        is_active BOOLEAN DEFAULT 1,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+      )`,
+      
+      // Pricing approvals table
+      `CREATE TABLE IF NOT EXISTS pricing_approvals (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        quote_id INTEGER,
+        customer_name TEXT,
+        original_price REAL NOT NULL,
+        requested_price REAL NOT NULL,
+        discount_amount REAL DEFAULT 0,
+        discount_percentage REAL DEFAULT 0,
+        reason_code TEXT,
+        justification TEXT,
+        requested_by INTEGER,
+        approval_level_required TEXT,
+        status TEXT DEFAULT 'pending',
+        approved_by INTEGER,
+        approved_at DATETIME,
+        expires_at DATETIME DEFAULT (datetime('now', '+7 days')),
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (requested_by) REFERENCES users(id),
+        FOREIGN KEY (approved_by) REFERENCES users(id)
+      )`,
+      
+      // Approval steps table
+      `CREATE TABLE IF NOT EXISTS approval_steps (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        approval_id INTEGER NOT NULL,
+        step_level TEXT NOT NULL,
+        assigned_to INTEGER,
+        status TEXT DEFAULT 'pending',
+        decision TEXT,
+        comments TEXT,
+        decided_at DATETIME,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (approval_id) REFERENCES pricing_approvals(id),
+        FOREIGN KEY (assigned_to) REFERENCES users(id)
+      )`,
+      
+      // Competitor pricing table
+      `CREATE TABLE IF NOT EXISTS competitor_pricing (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        competitor_name TEXT NOT NULL,
+        service_type TEXT,
+        price REAL NOT NULL,
+        market_area TEXT,
+        notes TEXT,
+        valid_until DATE,
+        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
       )`
     ];
 

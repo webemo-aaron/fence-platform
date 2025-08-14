@@ -1,0 +1,311 @@
+swagger: "2.0"
+info:
+  title: "Invisible Fence Platform API"
+  description: "Enterprise microservices API for fence business automation"
+  version: "2.0.0"
+host: "fence-platform-gateway-${var.region}.ue.gateway.dev"
+schemes:
+  - "https"
+produces:
+  - "application/json"
+consumes:
+  - "application/json"
+
+# Security definitions
+securityDefinitions:
+  firebase:
+    authorizationUrl: ""
+    flow: "implicit"
+    type: "oauth2"
+    x-google-issuer: "https://securetoken.google.com/${project_id}"
+    x-google-jwks_uri: "https://www.googleapis.com/service_accounts/v1/metadata/x509/securetoken@system.gserviceaccount.com"
+    x-google-audiences: "${project_id}"
+  
+  api_key:
+    type: "apiKey"
+    name: "X-API-Key"
+    in: "header"
+
+# Global security requirement
+security:
+  - firebase: []
+  - api_key: []
+
+# Rate limiting
+x-google-quota:
+  metricCosts:
+    read_requests: 1
+    write_requests: 2
+  
+# Paths and routing
+paths:
+  # Health checks
+  /health:
+    get:
+      summary: "System health check"
+      operationId: "health_check"
+      security: []  # No auth required
+      x-google-backend:
+        address: "https://fence-api-gateway-${var.region}.run.app/health"
+      responses:
+        200:
+          description: "System is healthy"
+
+  # Authentication endpoints
+  /api/auth/login:
+    post:
+      summary: "User login"
+      operationId: "user_login"
+      security: []  # No auth required for login
+      x-google-backend:
+        address: "https://fence-auth-service-${var.region}.run.app/login"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Login successful"
+        401:
+          description: "Invalid credentials"
+
+  /api/auth/signup:
+    post:
+      summary: "User signup"
+      operationId: "user_signup"
+      security: []  # No auth required for signup
+      x-google-backend:
+        address: "https://fence-auth-service-${var.region}.run.app/signup"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        201:
+          description: "User created successfully"
+
+  # Tenant progression endpoints
+  /api/progression/status:
+    get:
+      summary: "Get tenant progression status"
+      operationId: "get_progression_status"
+      x-google-backend:
+        address: "https://fence-auth-service-${var.region}.run.app/api/progression/status"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Progression status retrieved"
+
+  /api/progression/recommendations:
+    get:
+      summary: "Get tier upgrade recommendations"
+      operationId: "get_tier_recommendations"
+      x-google-backend:
+        address: "https://fence-auth-service-${var.region}.run.app/api/progression/recommendations"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Recommendations retrieved"
+
+  /api/progression/accept/{recommendationId}:
+    post:
+      summary: "Accept tier upgrade recommendation"
+      operationId: "accept_tier_upgrade"
+      parameters:
+        - name: "recommendationId"
+          in: "path"
+          required: true
+          type: "string"
+      x-google-backend:
+        address: "https://fence-auth-service-${var.region}.run.app/api/progression/accept/{recommendationId}"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Upgrade accepted successfully"
+
+  # Customer Portal endpoints
+  /api/customers:
+    get:
+      summary: "List customers"
+      operationId: "list_customers"
+      x-google-backend:
+        address: "https://fence-customer-portal-${var.region}.run.app/api/customers"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Customers retrieved"
+    
+    post:
+      summary: "Create customer"
+      operationId: "create_customer"
+      x-google-backend:
+        address: "https://fence-customer-portal-${var.region}.run.app/api/customers"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        201:
+          description: "Customer created"
+
+  /api/customers/{customerId}:
+    get:
+      summary: "Get customer details"
+      operationId: "get_customer"
+      parameters:
+        - name: "customerId"
+          in: "path"
+          required: true
+          type: "string"
+      x-google-backend:
+        address: "https://fence-customer-portal-${var.region}.run.app/api/customers/{customerId}"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Customer details retrieved"
+
+  # Pricing Service endpoints
+  /api/quotes:
+    get:
+      summary: "List quotes"
+      operationId: "list_quotes"
+      x-google-backend:
+        address: "https://fence-pricing-service-${var.region}.run.app/api/quotes"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Quotes retrieved"
+    
+    post:
+      summary: "Create quote"
+      operationId: "create_quote"
+      x-google-backend:
+        address: "https://fence-pricing-service-${var.region}.run.app/api/quotes"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        201:
+          description: "Quote created"
+
+  /api/quotes/{quoteId}/approve:
+    post:
+      summary: "Approve quote"
+      operationId: "approve_quote"
+      parameters:
+        - name: "quoteId"
+          in: "path"
+          required: true
+          type: "string"
+      x-google-backend:
+        address: "https://fence-pricing-service-${var.region}.run.app/api/quotes/{quoteId}/approve"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Quote approved"
+
+  # Maps Service endpoints (Professional tier and above)
+  /api/maps/pricing:
+    post:
+      summary: "Get location-based pricing"
+      operationId: "get_location_pricing"
+      x-google-backend:
+        address: "https://fence-maps-service-${var.region}.run.app/api/maps/pricing"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Location pricing calculated"
+
+  /api/maps/visualization:
+    post:
+      summary: "Generate property visualization"
+      operationId: "generate_property_visualization"
+      x-google-backend:
+        address: "https://fence-maps-service-${var.region}.run.app/api/maps/visualization"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Visualization generated"
+
+  # CRM Service endpoints (Professional tier and above)
+  /api/crm/contacts:
+    get:
+      summary: "List CRM contacts"
+      operationId: "list_crm_contacts"
+      x-google-backend:
+        address: "https://fence-crm-service-${var.region}.run.app/api/crm/contacts"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "CRM contacts retrieved"
+
+  # Workflow Service endpoints (Enterprise tier only)
+  /api/workflows:
+    get:
+      summary: "List automation workflows"
+      operationId: "list_workflows"
+      x-google-backend:
+        address: "https://fence-workflow-service-${var.region}.run.app/api/workflows"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Workflows retrieved"
+    
+    post:
+      summary: "Create automation workflow"
+      operationId: "create_workflow"
+      x-google-backend:
+        address: "https://fence-workflow-service-${var.region}.run.app/api/workflows"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        201:
+          description: "Workflow created"
+
+  /api/workflows/{workflowId}/execute:
+    post:
+      summary: "Execute workflow"
+      operationId: "execute_workflow"
+      parameters:
+        - name: "workflowId"
+          in: "path"
+          required: true
+          type: "string"
+      x-google-backend:
+        address: "https://fence-workflow-service-${var.region}.run.app/api/workflows/{workflowId}/execute"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Workflow executed"
+
+  # Storage Service endpoints
+  /api/storage/upload:
+    post:
+      summary: "Upload file"
+      operationId: "upload_file"
+      consumes:
+        - "multipart/form-data"
+      x-google-backend:
+        address: "https://fence-storage-service-${var.region}.run.app/api/storage/upload"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "File uploaded successfully"
+
+  # Notification Service endpoints
+  /api/notifications/send:
+    post:
+      summary: "Send notification"
+      operationId: "send_notification"
+      x-google-backend:
+        address: "https://fence-notification-service-${var.region}.run.app/api/notifications/send"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Notification sent"
+
+  # Frontend routes (serve static files through CDN)
+  /:
+    get:
+      summary: "Serve frontend application"
+      operationId: "serve_frontend"
+      security: []  # No auth required for public pages
+      x-google-backend:
+        address: "https://fence-frontend-service-${var.region}.run.app/"
+        path_translation: "APPEND_PATH_TO_ADDRESS"
+      responses:
+        200:
+          description: "Frontend served"
+
+# Path templates for dynamic routing
+x-google-endpoints:
+  - name: "fence-platform-gateway-${var.region}.ue.gateway.dev"
+    target: "projects/${project_id}/global/gateways/fence-platform-gateway"

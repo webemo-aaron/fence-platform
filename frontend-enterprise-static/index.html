@@ -1,0 +1,759 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fence Platform Enterprise - Complete Business Management</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+    <style>
+        .enterprise-gradient { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); }
+        .stat-card { @apply bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-6; }
+        .social-card { @apply bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-6; }
+        .loading { 
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #3498db;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 8px;
+            color: white;
+            font-weight: 600;
+            z-index: 1000;
+            display: none;
+            min-width: 300px;
+        }
+        
+        .notification.success {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+        }
+        
+        .notification.error {
+            background: linear-gradient(135deg, #f56565 0%, #e53e3e 100%);
+        }
+        
+        .floating-chat {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(102, 126, 234, 0.4);
+            transition: all 0.3s;
+            z-index: 1000;
+        }
+        
+        .floating-chat:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 30px rgba(102, 126, 234, 0.6);
+        }
+        
+        .feature-demo {
+            border: 2px dashed #e2e8f0;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            background: #f8fafc;
+            margin: 20px 0;
+        }
+        
+        .api-demo {
+            background: #f7fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            padding: 15px;
+            margin: 10px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 12px;
+        }
+        
+        .status-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .status-live {
+            background: #e6fffa;
+            color: #047857;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e2e8f0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+        }
+    </style>
+</head>
+<body class="bg-gray-50">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg border-b border-gray-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                        <span class="text-white font-bold text-lg">🏠</span>
+                    </div>
+                    <span class="ml-2 text-xl font-bold text-gray-900">Fence Platform Enterprise</span>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="showSection('dashboard')" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
+                        🏠 Dashboard
+                    </button>
+                    <button onclick="showSection('pricing')" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
+                        💰 Pricing
+                    </button>
+                    <button onclick="showSection('social')" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
+                        📱 Social
+                    </button>
+                    <button onclick="showSection('apis')" class="text-gray-500 hover:text-gray-700 px-3 py-2 rounded-md text-sm font-medium">
+                        🔧 APIs
+                    </button>
+                    <button onclick="loginWithFacebook()" class="bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-blue-700">
+                        📱 Connect Facebook
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Home Section -->
+    <div id="home-section" class="section">
+        <!-- Hero Section -->
+        <div class="enterprise-gradient text-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+                <div class="text-center">
+                    <h1 class="text-4xl md:text-6xl font-bold mb-6">
+                        Enterprise Fence Platform
+                        <span class="block text-blue-200">Complete Business Automation</span>
+                    </h1>
+                    <p class="text-xl md:text-2xl mb-8 text-blue-100 max-w-3xl mx-auto">
+                        Advanced microservices architecture with AI-powered pricing, Facebook automation, 
+                        and enterprise-grade analytics for large fence companies.
+                    </p>
+                    
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                        <button onclick="showSection('dashboard')" class="bg-white text-blue-600 px-8 py-4 rounded-lg font-semibold text-lg hover:bg-blue-50 transition-colors">
+                            Access Enterprise Dashboard
+                        </button>
+                        <button onclick="loginWithFacebook()" class="border-2 border-white text-white px-8 py-4 rounded-lg font-semibold text-lg hover:bg-white hover:text-blue-600 transition-colors">
+                            📱 Connect Facebook Business
+                        </button>
+                    </div>
+
+                    <!-- System Status -->
+                    <div class="inline-flex items-center space-x-2 bg-white bg-opacity-20 backdrop-blur-sm px-4 py-2 rounded-full">
+                        <div class="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                        <span class="text-sm">Enterprise systems operational • 4 microservices live</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Enterprise Features -->
+        <div class="py-20 bg-white">
+            <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="text-center mb-16">
+                    <h2 class="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
+                        Enterprise-Grade Features
+                    </h2>
+                    <p class="text-xl text-gray-600 max-w-3xl mx-auto">
+                        Built for large fence companies with advanced needs and high-volume operations.
+                    </p>
+                </div>
+
+                <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <!-- Advanced Analytics -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                            <span class="text-2xl">📊</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Advanced Analytics</h3>
+                        <p class="text-gray-600 mb-4">Real-time business intelligence with predictive analytics and custom reporting.</p>
+                        <div class="text-purple-600 font-semibold">Multi-tenant insights</div>
+                    </div>
+
+                    <!-- Facebook Automation -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                            <span class="text-2xl">📱</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Social Automation</h3>
+                        <p class="text-gray-600 mb-4">Complete Facebook business integration with automated posting and analytics.</p>
+                        <div class="text-blue-600 font-semibold">4 Content Templates</div>
+                    </div>
+
+                    <!-- Enterprise Security -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                            <span class="text-2xl">🔒</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Enterprise Security</h3>
+                        <p class="text-gray-600 mb-4">SOC2 compliant with advanced security, audit logs, and role-based access.</p>
+                        <div class="text-green-600 font-semibold">99.9% SLA</div>
+                    </div>
+
+                    <!-- Custom Integrations -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                        <div class="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-4">
+                            <span class="text-2xl">🔧</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Custom Integrations</h3>
+                        <p class="text-gray-600 mb-4">API access, webhooks, and custom integrations with your existing systems.</p>
+                        <div class="text-orange-600 font-semibold">REST & GraphQL APIs</div>
+                    </div>
+
+                    <!-- Dedicated Support -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                        <div class="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-4">
+                            <span class="text-2xl">🤝</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">Dedicated Support</h3>
+                        <p class="text-gray-600 mb-4">24/7 support with dedicated account manager and priority response.</p>
+                        <div class="text-red-600 font-semibold">< 1hr response time</div>
+                    </div>
+
+                    <!-- White-label Options -->
+                    <div class="bg-white p-8 rounded-xl shadow-lg border border-gray-100">
+                        <div class="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-4">
+                            <span class="text-2xl">🎨</span>
+                        </div>
+                        <h3 class="text-xl font-semibold text-gray-900 mb-2">White-label Platform</h3>
+                        <p class="text-gray-600 mb-4">Complete customization with your branding, domain, and custom features.</p>
+                        <div class="text-indigo-600 font-semibold">Your brand, our tech</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Section -->
+    <div id="dashboard-section" class="section hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">Enterprise Dashboard 📊</h1>
+            
+            <!-- Live System Status -->
+            <div class="bg-white rounded-xl shadow-lg p-6 mb-8">
+                <div class="flex items-center justify-between mb-4">
+                    <h2 class="text-xl font-bold text-gray-900">🚀 Enterprise System Status</h2>
+                    <div class="status-indicator status-live">
+                        <div class="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                        All Systems Operational
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div class="text-center">
+                        <div class="text-2xl mb-2">🔗</div>
+                        <div class="font-semibold text-gray-900">API Gateway</div>
+                        <div class="text-sm text-green-600">99.9% uptime</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl mb-2">🔐</div>
+                        <div class="font-semibold text-gray-900">Auth Service</div>
+                        <div class="text-sm text-green-600">Active</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl mb-2">💰</div>
+                        <div class="font-semibold text-gray-900">Pricing Engine</div>
+                        <div class="text-sm text-green-600">Processing</div>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-2xl mb-2">📱</div>
+                        <div class="font-semibold text-gray-900">Social Marketing</div>
+                        <div class="text-sm text-green-600">Connected</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-700">Monthly ROI</h3>
+                        <span class="text-2xl">💰</span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900" id="monthly-roi">$8,116</div>
+                    <div class="text-sm text-gray-600">+25% vs last month</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 87%"></div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-700">Annual Savings</h3>
+                        <span class="text-2xl">📈</span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900" id="annual-savings">$97,392</div>
+                    <div class="text-sm text-gray-600">5,447% ROI</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 95%"></div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-700">Active Jobs</h3>
+                        <span class="text-2xl">🚧</span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900">25</div>
+                    <div class="text-sm text-gray-600">This month</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 78%"></div>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-sm font-medium text-gray-700">Facebook Reach</h3>
+                        <span class="text-2xl">📱</span>
+                    </div>
+                    <div class="text-2xl font-bold text-gray-900" id="facebook-reach">8,500</div>
+                    <div class="text-sm text-gray-600">This week</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" style="width: 92%"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enterprise Analytics -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">🔥 Enterprise Analytics Dashboard</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="feature-demo">
+                        <div class="text-3xl mb-2">📊</div>
+                        <h3 class="font-bold mb-2">Real-time Insights</h3>
+                        <p class="text-sm text-gray-600">Live business intelligence with predictive analytics</p>
+                        <button onclick="demoAnalytics()" class="mt-3 bg-blue-600 text-white px-4 py-2 rounded text-sm hover:bg-blue-700">
+                            View Demo
+                        </button>
+                    </div>
+                    <div class="feature-demo">
+                        <div class="text-3xl mb-2">🎯</div>
+                        <h3 class="font-bold mb-2">Performance Tracking</h3>
+                        <p class="text-sm text-gray-600">KPI monitoring with automated alerts</p>
+                        <button onclick="demoTracking()" class="mt-3 bg-green-600 text-white px-4 py-2 rounded text-sm hover:bg-green-700">
+                            Track KPIs
+                        </button>
+                    </div>
+                    <div class="feature-demo">
+                        <div class="text-3xl mb-2">📈</div>
+                        <h3 class="font-bold mb-2">Growth Projections</h3>
+                        <p class="text-sm text-gray-600">AI-powered business forecasting</p>
+                        <button onclick="demoGrowth()" class="mt-3 bg-purple-600 text-white px-4 py-2 rounded text-sm hover:bg-purple-700">
+                            Forecast
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Pricing Section -->
+    <div id="pricing-section" class="section hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">Enterprise Pricing Calculator 💰</h1>
+            
+            <!-- ROI Calculator -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Enterprise ROI Calculator</h2>
+                <div class="grid md:grid-cols-2 gap-8">
+                    <div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Jobs per Month</label>
+                                <input type="number" id="jobs-per-month" value="25" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Average Job Value ($)</label>
+                                <input type="number" id="job-value" value="850" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-2">Monthly Fuel Cost ($)</label>
+                                <input type="number" id="fuel-cost" value="600" class="w-full px-4 py-3 border border-gray-300 rounded-lg">
+                            </div>
+                            <button onclick="calculateROI()" class="w-full bg-blue-600 text-white py-3 rounded-lg font-semibold hover:bg-blue-700">
+                                Calculate Enterprise ROI
+                            </button>
+                        </div>
+                    </div>
+                    <div id="roi-results" class="bg-green-50 p-6 rounded-lg">
+                        <h3 class="text-lg font-bold text-green-800 mb-4">Enterprise ROI Results</h3>
+                        <div class="space-y-3">
+                            <div class="flex justify-between">
+                                <span>Monthly Savings:</span>
+                                <span class="font-bold">$2,166</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span>Additional Revenue:</span>
+                                <span class="font-bold">$5,950</span>
+                            </div>
+                            <div class="flex justify-between text-lg border-t pt-3">
+                                <span class="font-bold">Total Monthly Benefit:</span>
+                                <span class="font-bold text-green-900">$8,116</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Enterprise Pricing -->
+            <div class="text-center mb-8">
+                <h2 class="text-2xl font-bold text-gray-900">Enterprise Plan</h2>
+                <div class="text-5xl font-bold text-blue-600 my-4">$599<span class="text-lg text-gray-600">/month</span></div>
+                <p class="text-gray-600">Everything you need for large-scale fence operations</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Social Media Section -->
+    <div id="social-section" class="section hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">Enterprise Social Media 📱</h1>
+            
+            <!-- Facebook Integration -->
+            <div class="social-card mb-8">
+                <div class="text-center">
+                    <div class="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">📱</span>
+                    </div>
+                    <h3 class="text-lg font-bold text-gray-900 mb-2">Facebook Business Integration</h3>
+                    <p class="text-gray-600 mb-4">Connect your Facebook Business account for automated posting and analytics</p>
+                    <button onclick="loginWithFacebook()" class="bg-blue-600 text-white px-6 py-3 rounded-lg font-semibold hover:bg-blue-700">
+                        Connect Facebook Business
+                    </button>
+                </div>
+            </div>
+
+            <!-- Content Templates -->
+            <div class="bg-white rounded-xl shadow-lg p-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">Enterprise Content Templates</h2>
+                <div class="grid md:grid-cols-2 gap-6" id="social-templates">
+                    <div class="loading mx-auto"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- APIs Section -->
+    <div id="apis-section" class="section hidden">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <h1 class="text-3xl font-bold text-gray-900 mb-8">🔧 Enterprise APIs & Integrations</h1>
+            
+            <!-- API Gateway Status -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mb-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">API Gateway Status</h2>
+                <div class="api-demo">
+                    <div class="mb-2"><strong>Base URL:</strong> https://fence-api-gateway-453424326027.us-central1.run.app</div>
+                    <div class="mb-2"><strong>Status:</strong> <span class="text-green-600">✅ Operational</span></div>
+                    <div class="mb-2"><strong>Response Time:</strong> ~200ms</div>
+                    <div class="mb-2"><strong>Rate Limit:</strong> 1000 requests/minute</div>
+                </div>
+                <button onclick="testAPIGateway()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                    Test Connection
+                </button>
+            </div>
+
+            <!-- Available APIs -->
+            <div class="grid md:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">💰 Pricing API</h2>
+                    <div class="api-demo mb-4">
+                        <div><strong>Endpoint:</strong> POST /api/pricing/calculate-roi</div>
+                        <div><strong>Auth:</strong> JWT Bearer Token</div>
+                        <div><strong>Response:</strong> ROI calculations & recommendations</div>
+                    </div>
+                    <div class="api-demo mb-4">
+                        <pre>{<br>  "current_jobs_per_month": 25,<br>  "average_job_value": 850,<br>  "current_fuel_cost": 600<br>}</pre>
+                    </div>
+                    <button onclick="testPricingAPI()" class="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700">
+                        Test API
+                    </button>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-8">
+                    <h2 class="text-xl font-bold text-gray-900 mb-6">📱 Social API</h2>
+                    <div class="api-demo mb-4">
+                        <div><strong>Endpoint:</strong> GET /api/social/templates</div>
+                        <div><strong>Auth:</strong> Facebook OAuth</div>
+                        <div><strong>Response:</strong> Content templates & campaigns</div>
+                    </div>
+                    <div class="api-demo mb-4">
+                        <pre>{<br>  "templates": [<br>    {"id": "spring-promo",<br>     "name": "Spring Promotion"}]<br>}</pre>
+                    </div>
+                    <button onclick="testSocialAPI()" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+                        Test API
+                    </button>
+                </div>
+            </div>
+
+            <!-- Custom Integration Examples -->
+            <div class="bg-white rounded-xl shadow-lg p-8 mt-8">
+                <h2 class="text-xl font-bold text-gray-900 mb-6">🛠️ Custom Integration Examples</h2>
+                <div class="grid md:grid-cols-3 gap-6">
+                    <div class="feature-demo">
+                        <div class="text-2xl mb-2">🔗</div>
+                        <h3 class="font-bold mb-2">Webhook Integration</h3>
+                        <p class="text-sm text-gray-600 mb-3">Receive real-time updates on job status, payments, and customer interactions</p>
+                        <div class="api-demo text-xs">
+                            POST /webhooks/job-completed<br>
+                            Authorization: Bearer {token}
+                        </div>
+                    </div>
+                    <div class="feature-demo">
+                        <div class="text-2xl mb-2">📊</div>
+                        <h3 class="font-bold mb-2">Analytics Export</h3>
+                        <p class="text-sm text-gray-600 mb-3">Export business data to your preferred analytics platform</p>
+                        <div class="api-demo text-xs">
+                            GET /api/analytics/export<br>
+                            Format: JSON, CSV, XML
+                        </div>
+                    </div>
+                    <div class="feature-demo">
+                        <div class="text-2xl mb-2">🤖</div>
+                        <h3 class="font-bold mb-2">Automation Rules</h3>
+                        <p class="text-sm text-gray-600 mb-3">Create custom business logic and automated workflows</p>
+                        <div class="api-demo text-xs">
+                            POST /api/automation/rules<br>
+                            Triggers: Events, Time, Conditions
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Chat Support -->
+    <div class="floating-chat" onclick="openSupport()" title="Enterprise Support">
+        💬
+    </div>
+
+    <!-- Notification System -->
+    <div class="notification" id="notification"></div>
+
+    <script>
+        const API_BASE = 'https://fence-api-gateway-453424326027.us-central1.run.app';
+        
+        // Navigation
+        function showSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+            
+            if (sectionName === 'social') {
+                loadSocialTemplates();
+            }
+        }
+
+        // Facebook Login
+        function loginWithFacebook() {
+            window.location.href = 'https://fence-auth-service-453424326027.us-central1.run.app/auth/facebook';
+        }
+
+        // ROI Calculator
+        async function calculateROI() {
+            const jobsPerMonth = document.getElementById('jobs-per-month').value;
+            const jobValue = document.getElementById('job-value').value;
+            const fuelCost = document.getElementById('fuel-cost').value;
+            
+            try {
+                const response = await axios.post(`${API_BASE}/api/pricing/calculate-roi`, {
+                    current_jobs_per_month: parseInt(jobsPerMonth),
+                    average_job_value: parseInt(jobValue),
+                    current_fuel_cost: parseInt(fuelCost),
+                    current_labor_hours: 180,
+                    hourly_rate: 28
+                });
+                
+                const data = response.data;
+                document.getElementById('roi-results').innerHTML = `
+                    <h3 class="text-lg font-bold text-green-800 mb-4">Enterprise ROI Results</h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between">
+                            <span>Monthly Fuel Savings:</span>
+                            <span class="font-bold">$${data.financial_impact.monthly_fuel_savings}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Monthly Labor Savings:</span>
+                            <span class="font-bold">$${data.financial_impact.monthly_labor_savings}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Additional Revenue:</span>
+                            <span class="font-bold">$${data.financial_impact.monthly_additional_revenue}</span>
+                        </div>
+                        <div class="flex justify-between text-lg border-t pt-3">
+                            <span class="font-bold">Total Monthly Benefit:</span>
+                            <span class="font-bold text-green-900">$${data.financial_impact.total_monthly_benefit.toLocaleString()}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span>Annual ROI:</span>
+                            <span class="font-bold text-green-900">${data.roi_metrics.annual_roi_percent}%</span>
+                        </div>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('ROI calculation failed:', error);
+                document.getElementById('roi-results').innerHTML = `
+                    <div class="text-red-600">Failed to calculate ROI. Please try again.</div>
+                `;
+            }
+        }
+
+        // Load Social Templates
+        async function loadSocialTemplates() {
+            try {
+                const response = await axios.get(`${API_BASE}/api/social/templates`);
+                const templates = response.data.templates;
+                
+                const templatesHtml = templates.map(template => `
+                    <div class="bg-gray-50 p-6 rounded-lg">
+                        <h3 class="font-bold text-gray-900 mb-2">${template.name}</h3>
+                        <p class="text-gray-600 text-sm mb-4">${template.template}</p>
+                        <div class="flex flex-wrap gap-1 mb-3">
+                            ${template.hashtags.map(tag => `<span class="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded">${tag}</span>`).join('')}
+                        </div>
+                        <button class="w-full bg-blue-600 text-white py-2 rounded font-medium hover:bg-blue-700">
+                            Use Template
+                        </button>
+                    </div>
+                `).join('');
+                
+                document.getElementById('social-templates').innerHTML = templatesHtml;
+            } catch (error) {
+                console.error('Failed to load templates:', error);
+                document.getElementById('social-templates').innerHTML = `
+                    <div class="text-center text-gray-500 col-span-2">
+                        Failed to load social templates. Please try again.
+                    </div>
+                `;
+            }
+        }
+
+        // Demo Functions
+        function demoAnalytics() {
+            showNotification('🔥 Enterprise Analytics Demo: Real-time insights activated!', 'success');
+        }
+
+        function demoTracking() {
+            showNotification('🎯 Performance Tracking: KPI monitoring enabled!', 'success');
+        }
+
+        function demoGrowth() {
+            showNotification('📈 Growth Projections: AI forecasting initiated!', 'success');
+        }
+
+        // API Testing Functions
+        async function testAPIGateway() {
+            try {
+                const response = await axios.get(`${API_BASE}/health`);
+                showNotification('✅ API Gateway: Connection successful!', 'success');
+            } catch (error) {
+                showNotification('❌ API Gateway: Connection failed!', 'error');
+            }
+        }
+
+        async function testPricingAPI() {
+            try {
+                const response = await axios.post(`${API_BASE}/api/pricing/calculate-roi`, {
+                    current_jobs_per_month: 25,
+                    average_job_value: 850,
+                    current_fuel_cost: 600,
+                    current_labor_hours: 180,
+                    hourly_rate: 28
+                });
+                showNotification('💰 Pricing API: ROI calculation successful!', 'success');
+            } catch (error) {
+                showNotification('❌ Pricing API: Test failed!', 'error');
+            }
+        }
+
+        async function testSocialAPI() {
+            try {
+                const response = await axios.get(`${API_BASE}/api/social/templates`);
+                showNotification('📱 Social API: Templates loaded successfully!', 'success');
+            } catch (error) {
+                showNotification('❌ Social API: Test failed!', 'error');
+            }
+        }
+
+        // Support Functions
+        function openSupport() {
+            showNotification('💬 Enterprise Support: Connecting to dedicated account manager...', 'success');
+            setTimeout(() => {
+                showNotification('🤝 Support connected! <1hr response time guaranteed.', 'success');
+            }, 2000);
+        }
+
+        // Enhanced Navigation
+        function showSection(sectionName) {
+            document.querySelectorAll('.section').forEach(section => {
+                section.classList.add('hidden');
+            });
+            document.getElementById(sectionName + '-section').classList.remove('hidden');
+            
+            if (sectionName === 'social') {
+                loadSocialTemplates();
+            } else if (sectionName === 'apis') {
+                showNotification('🔧 Enterprise APIs loaded - Full integration capabilities available!', 'success');
+            }
+        }
+
+        // Notification System
+        function showNotification(message, type) {
+            const notification = document.getElementById('notification');
+            notification.innerHTML = message;
+            notification.className = `notification ${type}`;
+            notification.style.display = 'block';
+            
+            setTimeout(() => {
+                notification.style.display = 'none';
+            }, 4000);
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load dashboard data
+            calculateROI();
+            // Show welcome message
+            setTimeout(() => {
+                showNotification('🏢 Welcome to Enterprise Platform - All systems operational!', 'success');
+            }, 1000);
+        });
+    </script>
+</body>
+</html>

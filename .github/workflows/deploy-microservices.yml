@@ -1,0 +1,139 @@
+name: Deploy Microservices to GCP
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'microservices/**'
+      - '.github/workflows/deploy-microservices.yml'
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: servicehive-f009f
+  REGION: us-central1
+  SERVICE_ACCOUNT: fence-platform-sa@servicehive-f009f.iam.gserviceaccount.com
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: api-gateway
+            port: 8080
+            memory: 512Mi
+          - name: auth-service
+            port: 3001
+            memory: 256Mi
+          - name: pricing-service
+            port: 3004
+            memory: 256Mi
+          - name: social-marketing-service
+            port: 3007
+            memory: 256Mi
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Configure Docker for Artifact Registry
+        run: |
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+      - name: Generate package-lock.json
+        working-directory: ./microservices/${{ matrix.service.name }}
+        run: |
+          if [ ! -f package-lock.json ]; then
+            npm install --package-lock-only
+          fi
+
+      - name: Build Docker image
+        working-directory: ./microservices/${{ matrix.service.name }}
+        run: |
+          docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ matrix.service.name }}:${{ github.sha }} .
+          docker tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ matrix.service.name }}:${{ github.sha }} \
+                     ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ matrix.service.name }}:latest
+
+      - name: Push to Artifact Registry
+        run: |
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ matrix.service.name }}:${{ github.sha }}
+          docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ matrix.service.name }}:latest
+
+      - name: Deploy to Cloud Run
+        run: |
+          gcloud run deploy fence-${{ matrix.service.name }} \
+            --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/fence-platform/${{ matrix.service.name }}:${{ github.sha }} \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --service-account ${{ env.SERVICE_ACCOUNT }} \
+            --port ${{ matrix.service.port }} \
+            --memory ${{ matrix.service.memory }} \
+            --min-instances 0 \
+            --max-instances 10 \
+            --set-env-vars NODE_ENV=production \
+            --set-env-vars PORT=${{ matrix.service.port }} \
+            --set-secrets JWT_SECRET=fence-jwt-secret:latest \
+            --set-secrets FACEBOOK_APP_ID=facebook-app-id:latest \
+            --set-secrets FACEBOOK_APP_SECRET=facebook-app-secret:latest \
+            --project ${{ env.PROJECT_ID }}
+
+      - name: Get Service URL
+        run: |
+          SERVICE_URL=$(gcloud run services describe fence-${{ matrix.service.name }} \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --format 'value(status.url)')
+          echo "Service deployed at: $SERVICE_URL"
+          echo "${{ matrix.service.name }}_URL=$SERVICE_URL" >> $GITHUB_ENV
+
+  update-api-gateway:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+      - name: Set up Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1
+
+      - name: Update API Gateway with service URLs
+        run: |
+          # Get all service URLs
+          AUTH_URL=$(gcloud run services describe fence-auth-service --region ${{ env.REGION }} --project ${{ env.PROJECT_ID }} --format 'value(status.url)')
+          PRICING_URL=$(gcloud run services describe fence-pricing-service --region ${{ env.REGION }} --project ${{ env.PROJECT_ID }} --format 'value(status.url)')
+          SOCIAL_URL=$(gcloud run services describe fence-social-marketing-service --region ${{ env.REGION }} --project ${{ env.PROJECT_ID }} --format 'value(status.url)')
+          
+          # Update API Gateway environment variables
+          gcloud run services update fence-api-gateway \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --update-env-vars AUTH_SERVICE_URL=$AUTH_URL,PRICING_SERVICE_URL=$PRICING_URL,SOCIAL_MARKETING_SERVICE_URL=$SOCIAL_URL
+
+      - name: Verify deployment
+        run: |
+          API_GATEWAY_URL=$(gcloud run services describe fence-api-gateway \
+            --region ${{ env.REGION }} \
+            --project ${{ env.PROJECT_ID }} \
+            --format 'value(status.url)')
+          
+          echo "API Gateway URL: $API_GATEWAY_URL"
+          curl -s "$API_GATEWAY_URL/health" | jq '.'

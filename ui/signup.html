@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Start Your Free Trial - Fence Business Platform</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 1200px;
+            display: flex;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .left-panel {
+            flex: 1;
+            padding: 60px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .right-panel {
+            flex: 1;
+            padding: 60px;
+            background: white;
+        }
+
+        .logo {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 40px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            background: white;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+
+        h1 {
+            font-size: 42px;
+            margin-bottom: 20px;
+            color: white;
+        }
+
+        .subtitle {
+            font-size: 20px;
+            margin-bottom: 40px;
+            opacity: 0.95;
+        }
+
+        .features {
+            list-style: none;
+        }
+
+        .features li {
+            padding: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 18px;
+        }
+
+        .check {
+            width: 24px;
+            height: 24px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .form-title {
+            font-size: 32px;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .form-subtitle {
+            color: #666;
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 15px;
+        }
+
+        .input-group .form-group {
+            flex: 1;
+        }
+
+        .subdomain-input {
+            display: flex;
+            align-items: center;
+            border: 2px solid #e1e4e8;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .subdomain-input input {
+            border: none;
+            flex: 1;
+        }
+
+        .subdomain-suffix {
+            padding: 12px 16px;
+            background: #f6f8fa;
+            color: #666;
+            border-left: 2px solid #e1e4e8;
+        }
+
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .terms {
+            margin-top: 20px;
+            text-align: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        .terms a {
+            color: #667eea;
+            text-decoration: none;
+        }
+
+        .error {
+            color: #dc3545;
+            font-size: 14px;
+            margin-top: 5px;
+            display: none;
+        }
+
+        .success {
+            background: #d4edda;
+            border: 1px solid #c3e6cb;
+            color: #155724;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            margin: 20px 0;
+        }
+
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .pricing-note {
+            background: rgba(255,255,255,0.1);
+            padding: 20px;
+            border-radius: 12px;
+            margin-top: 30px;
+        }
+
+        .price {
+            font-size: 36px;
+            font-weight: bold;
+        }
+
+        .price-period {
+            font-size: 18px;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .left-panel {
+                padding: 40px 30px;
+            }
+            
+            .right-panel {
+                padding: 40px 30px;
+            }
+            
+            h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-panel">
+            <div class="logo">
+                <div class="logo-icon">🔧</div>
+                Fence Platform
+            </div>
+            
+            <h1>Transform Your Fence Business</h1>
+            <p class="subtitle">Join hundreds of installers saving 20+ hours per week</p>
+            
+            <ul class="features">
+                <li>
+                    <div class="check">✓</div>
+                    ROI Calculator with instant quotes
+                </li>
+                <li>
+                    <div class="check">✓</div>
+                    Location-based smart pricing
+                </li>
+                <li>
+                    <div class="check">✓</div>
+                    Route optimization saves 15% on fuel
+                </li>
+                <li>
+                    <div class="check">✓</div>
+                    Professional PDF proposals
+                </li>
+                <li>
+                    <div class="check">✓</div>
+                    Customer management (CRM)
+                </li>
+            </ul>
+            
+            <div class="pricing-note">
+                <div class="price">$49 <span class="price-period">/month</span></div>
+                <p style="margin-top: 10px;">Special launch pricing (normally $99)</p>
+                <p style="margin-top: 5px; opacity: 0.9;">14-day free trial • No credit card required</p>
+            </div>
+        </div>
+        
+        <div class="right-panel">
+            <h2 class="form-title">Start Your Free Trial</h2>
+            <p class="form-subtitle">Get your dedicated platform in 30 seconds</p>
+            
+            <div class="success" id="successMessage"></div>
+            
+            <form id="signupForm">
+                <div class="form-group">
+                    <label for="company">Company Name *</label>
+                    <input type="text" id="company" name="company" required 
+                           placeholder="ACME Fence Co" maxlength="100">
+                    <div class="error" id="companyError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="subdomain">Your Platform URL *</label>
+                    <div class="subdomain-input">
+                        <input type="text" id="subdomain" name="subdomain" required 
+                               placeholder="acme" pattern="[a-z0-9-]+" maxlength="30">
+                        <div class="subdomain-suffix">.fenceplatform.io</div>
+                    </div>
+                    <div class="error" id="subdomainError"></div>
+                </div>
+                
+                <div class="input-group">
+                    <div class="form-group">
+                        <label for="firstName">First Name *</label>
+                        <input type="text" id="firstName" name="firstName" required 
+                               placeholder="John">
+                        <div class="error" id="firstNameError"></div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="lastName">Last Name *</label>
+                        <input type="text" id="lastName" name="lastName" required 
+                               placeholder="Smith">
+                        <div class="error" id="lastNameError"></div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email Address *</label>
+                    <input type="email" id="email" name="email" required 
+                           placeholder="john@acmefence.com">
+                    <div class="error" id="emailError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="phone">Phone Number</label>
+                    <input type="tel" id="phone" name="phone" 
+                           placeholder="(555) 123-4567">
+                    <div class="error" id="phoneError"></div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="password">Password *</label>
+                    <input type="password" id="password" name="password" required 
+                           placeholder="Min 8 characters" minlength="8">
+                    <div class="error" id="passwordError"></div>
+                </div>
+                
+                <button type="submit" class="submit-btn" id="submitBtn">
+                    Start Free Trial
+                </button>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 15px;">Creating your platform...</p>
+                </div>
+                
+                <p class="terms">
+                    By signing up, you agree to our 
+                    <a href="/terms" target="_blank">Terms of Service</a> and 
+                    <a href="/privacy" target="_blank">Privacy Policy</a>
+                </p>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        // Auto-generate subdomain from company name
+        document.getElementById('company').addEventListener('input', function(e) {
+            const subdomain = e.target.value
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '')
+                .substring(0, 30);
+            
+            document.getElementById('subdomain').value = subdomain;
+        });
+
+        // Validate subdomain format
+        document.getElementById('subdomain').addEventListener('input', function(e) {
+            const value = e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '');
+            e.target.value = value;
+        });
+
+        // Handle form submission
+        document.getElementById('signupForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Clear previous errors
+            document.querySelectorAll('.error').forEach(el => el.style.display = 'none');
+            document.getElementById('successMessage').style.display = 'none';
+            
+            // Get form data
+            const formData = {
+                company: document.getElementById('company').value.trim(),
+                subdomain: document.getElementById('subdomain').value.trim(),
+                firstName: document.getElementById('firstName').value.trim(),
+                lastName: document.getElementById('lastName').value.trim(),
+                email: document.getElementById('email').value.trim(),
+                phone: document.getElementById('phone').value.trim(),
+                password: document.getElementById('password').value
+            };
+            
+            // Validate
+            let hasErrors = false;
+            
+            if (formData.company.length < 2) {
+                document.getElementById('companyError').textContent = 'Company name is too short';
+                document.getElementById('companyError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (formData.subdomain.length < 3) {
+                document.getElementById('subdomainError').textContent = 'Subdomain must be at least 3 characters';
+                document.getElementById('subdomainError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (!/^[a-z0-9-]+$/.test(formData.subdomain)) {
+                document.getElementById('subdomainError').textContent = 'Only lowercase letters, numbers, and hyphens allowed';
+                document.getElementById('subdomainError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (formData.password.length < 8) {
+                document.getElementById('passwordError').textContent = 'Password must be at least 8 characters';
+                document.getElementById('passwordError').style.display = 'block';
+                hasErrors = true;
+            }
+            
+            if (hasErrors) return;
+            
+            // Show loading
+            document.getElementById('submitBtn').disabled = true;
+            document.getElementById('submitBtn').textContent = 'Creating account...';
+            document.getElementById('loading').style.display = 'block';
+            
+            try {
+                const response = await fetch('/api/signup', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok && result.success) {
+                    // Success!
+                    document.getElementById('successMessage').innerHTML = `
+                        <strong>Success!</strong><br>
+                        Your platform is ready at: 
+                        <a href="https://${result.subdomain}.fenceplatform.io" style="color: #155724; font-weight: bold;">
+                            ${result.subdomain}.fenceplatform.io
+                        </a><br>
+                        Check your email for login instructions.
+                    `;
+                    document.getElementById('successMessage').style.display = 'block';
+                    
+                    // Reset form
+                    document.getElementById('signupForm').reset();
+                    
+                    // Redirect after 3 seconds
+                    setTimeout(() => {
+                        window.location.href = `https://${result.subdomain}.fenceplatform.io`;
+                    }, 3000);
+                    
+                } else {
+                    // Error
+                    if (result.field && document.getElementById(result.field + 'Error')) {
+                        document.getElementById(result.field + 'Error').textContent = result.error;
+                        document.getElementById(result.field + 'Error').style.display = 'block';
+                    } else {
+                        alert(result.error || 'Signup failed. Please try again.');
+                    }
+                }
+                
+            } catch (error) {
+                console.error('Signup error:', error);
+                alert('Network error. Please check your connection and try again.');
+                
+            } finally {
+                document.getElementById('submitBtn').disabled = false;
+                document.getElementById('submitBtn').textContent = 'Start Free Trial';
+                document.getElementById('loading').style.display = 'none';
+            }
+        });
+    </script>
+</body>
+</html>

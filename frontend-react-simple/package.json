@@ -1,0 +1,18 @@
+{
+  "name": "fence-react-enterprise-simple",
+  "version": "3.0.0",
+  "description": "Simplified React Enterprise Frontend",
+  "main": "index.js",
+  "scripts": {
+    "start": "node server.js",
+    "build": "echo 'Static build ready'",
+    "dev": "node server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2",
+    "cors": "^2.8.5"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

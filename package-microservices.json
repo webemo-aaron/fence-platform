@@ -1,0 +1,8 @@
+{
+  "name": "fence-platform-microservices",
+  "version": "2.0.0",
+  "description": "Microservices for fence platform",
+  "dependencies": {
+    "express": "^4.18.2"
+  }
+}

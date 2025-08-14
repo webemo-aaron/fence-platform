@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chart Update Test</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            margin-bottom: 20px;
+        }
+        .controls {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        .status {
+            padding: 10px;
+            background: #e8f5e9;
+            color: #2e7d32;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-top: 20px;
+        }
+        .data-display {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Live Chart Update Test</h1>
+        
+        <div class="status" id="status">Ready to test live updates</div>
+        
+        <div class="controls">
+            <button onclick="updateEssentials()">Update Essentials Tier</button>
+            <button onclick="updateConfig()">Update Global Config</button>
+            <button onclick="fetchAndDisplay()">Refresh Chart</button>
+            <button onclick="randomizeAll()">Randomize All Values</button>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="testChart"></canvas>
+        </div>
+        
+        <div class="data-display" id="dataDisplay">
+            Current data will appear here...
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3333/api';
+        let chart = null;
+        
+        // Initialize chart
+        function initChart(data) {
+            const ctx = document.getElementById('testChart').getContext('2d');
+            
+            if (chart) {
+                chart.destroy();
+            }
+            
+            const calculations = data.calculations.calculations;
+            
+            chart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: calculations.map(c => c.tier),
+                    datasets: [{
+                        label: 'Monthly ROI',
+                        data: calculations.map(c => c.monthlyROI),
+                        backgroundColor: ['#667eea', '#48bb78', '#f56565'],
+                        borderColor: ['#5a67d8', '#38a169', '#e53e3e'],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        title: {
+                            display: true,
+                            text: 'Real-Time ROI Updates',
+                            font: { size: 18, weight: 'bold' }
+                        },
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return '$' + value.toLocaleString();
+                                }
+                            }
+                        }
+                    },
+                    animation: {
+                        duration: 500
+                    }
+                }
+            });
+        }
+        
+        // Fetch and display data
+        async function fetchAndDisplay() {
+            try {
+                const response = await fetch(`${API_URL}/calculations`);
+                const data = await response.json();
+                
+                initChart(data);
+                
+                document.getElementById('dataDisplay').innerHTML = 
+                    '<strong>Live Data:</strong><br>' + 
+                    JSON.stringify(data.calculations.calculations, null, 2);
+                
+                updateStatus('Chart updated with latest data', 'success');
+            } catch (error) {
+                updateStatus('Error fetching data: ' + error.message, 'error');
+            }
+        }
+        
+        // Update Essentials tier
+        async function updateEssentials() {
+            const newData = {
+                basePrice: Math.floor(Math.random() * 200) + 200,
+                adminHours: Math.floor(Math.random() * 30) + 10,
+                adminCost: Math.floor(Math.random() * 50) + 30,
+                travelHours: Math.floor(Math.random() * 20) + 5,
+                revenuLeakagePercent: Math.random() * 0.1,
+                paymentDelays: Math.floor(Math.random() * 1000) + 200,
+                upsellRevenue: Math.floor(Math.random() * 500),
+                predictiveMaintenance: Math.floor(Math.random() * 300)
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/tiers/Essentials`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newData)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update');
+                
+                updateStatus('Essentials tier updated with random values', 'success');
+                setTimeout(fetchAndDisplay, 500);
+            } catch (error) {
+                updateStatus('Error updating tier: ' + error.message, 'error');
+            }
+        }
+        
+        // Update config
+        async function updateConfig() {
+            const newConfig = {
+                hourlyRate: Math.floor(Math.random() * 20) + 30,
+                monthlyRevenue: Math.floor(Math.random() * 50000) + 30000,
+                manualAdminHours: Math.floor(Math.random() * 40) + 60,
+                manualTravelHours: Math.floor(Math.random() * 20) + 30
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(newConfig)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update');
+                
+                updateStatus('Global config updated with random values', 'success');
+                setTimeout(fetchAndDisplay, 500);
+            } catch (error) {
+                updateStatus('Error updating config: ' + error.message, 'error');
+            }
+        }
+        
+        // Randomize all values
+        async function randomizeAll() {
+            updateStatus('Randomizing all values...', 'processing');
+            
+            // Update all three tiers
+            const tiers = ['Essentials', 'Professional', 'Enterprise'];
+            for (const tier of tiers) {
+                const data = {
+                    basePrice: Math.floor(Math.random() * 500) + 200,
+                    adminHours: Math.floor(Math.random() * 40) + 20,
+                    adminCost: Math.floor(Math.random() * 100) + 50,
+                    travelHours: Math.floor(Math.random() * 30) + 10,
+                    revenuLeakagePercent: Math.random() * 0.15,
+                    paymentDelays: Math.floor(Math.random() * 2000) + 500,
+                    upsellRevenue: Math.floor(Math.random() * 1500),
+                    predictiveMaintenance: Math.floor(Math.random() * 1000)
+                };
+                
+                await fetch(`${API_URL}/tiers/${tier}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+            }
+            
+            updateStatus('All tiers randomized!', 'success');
+            setTimeout(fetchAndDisplay, 500);
+        }
+        
+        // Update status message
+        function updateStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.style.background = type === 'error' ? '#ffebee' : 
+                                       type === 'processing' ? '#fff3e0' : '#e8f5e9';
+            statusEl.style.color = type === 'error' ? '#c62828' : 
+                                   type === 'processing' ? '#e65100' : '#2e7d32';
+        }
+        
+        // Auto-refresh every 5 seconds
+        setInterval(fetchAndDisplay, 5000);
+        
+        // Initial load
+        fetchAndDisplay();
+    </script>
+</body>
+</html>
