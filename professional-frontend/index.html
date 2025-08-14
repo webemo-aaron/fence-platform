@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🚀 Fence Platform Professional - Advanced ROI Management</title>
+    <title>Invisible Fence ROI Calculator</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         * {
@@ -45,56 +45,22 @@
         }
 
         .header-actions {
-            margin-top: 20px;
-        }
-
-        .header-actions a, .header-actions button {
-            display: inline-block;
-            padding: 12px 24px;
-            margin: 0 10px 10px 0;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            text-decoration: none;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-            border: none;
-            cursor: pointer;
-            font-size: 1rem;
-        }
-
-        .header-actions a:hover, .header-actions button:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
-        }
-
-        .header-actions .secondary {
-            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
-        }
-
-        .professional-badge {
-            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-            color: white;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 12px;
-            font-weight: 600;
-            display: inline-block;
             position: absolute;
             top: 30px;
             right: 30px;
+            display: flex;
+            gap: 10px;
         }
 
         .header-btn {
-            display: inline-block;
             padding: 10px 20px;
-            margin: 0 5px;
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            text-decoration: none;
+            border: none;
             border-radius: 8px;
             font-weight: 600;
-            font-size: 0.95rem;
+            cursor: pointer;
+            text-decoration: none;
             display: inline-flex;
             align-items: center;
             gap: 8px;
@@ -149,40 +115,37 @@
         }
 
         .tier-btn:hover {
-            background: #f0f4f8;
+            border-color: #667eea;
+            transform: translateY(-2px);
         }
 
         .tier-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #667eea;
             color: white;
             border-color: #667eea;
         }
 
         .form-group {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            margin-bottom: 20px;
+            margin-bottom: 15px;
         }
 
-        .form-group label {
+        label {
             display: block;
             color: #555;
             margin-bottom: 5px;
-            font-size: 0.9rem;
             font-weight: 500;
         }
 
-        .form-group input {
+        input[type="number"] {
             width: 100%;
             padding: 10px;
-            border: 1px solid #ddd;
+            border: 2px solid #e0e0e0;
             border-radius: 6px;
-            font-size: 1rem;
+            font-size: 16px;
             transition: border-color 0.3s;
         }
 
-        .form-group input:focus {
+        input[type="number"]:focus {
             outline: none;
             border-color: #667eea;
         }
@@ -190,12 +153,10 @@
         .roi-metric {
             display: flex;
             justify-content: space-between;
-            padding: 12px 0;
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .roi-metric:last-child {
-            border-bottom: none;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
         }
 
         .roi-metric .label {
@@ -212,89 +173,82 @@
         .roi-metric.total {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
-            padding: 15px;
-            border-radius: 8px;
-            margin: 15px 0;
         }
 
-        .roi-metric.total .label, .roi-metric.total .value {
+        .roi-metric.total .label,
+        .roi-metric.total .value {
             color: white;
         }
 
-        .status {
-            padding: 15px;
+        .chart-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
             border-radius: 8px;
-            margin-bottom: 20px;
-            text-align: center;
-            font-weight: 500;
-            animation: slideDown 0.3s ease;
-        }
-
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-
-        .status.processing {
-            background: #cce5ff;
-            color: #004085;
-            border: 1px solid #b8daff;
-        }
-
-        @keyframes slideDown {
-            from {
-                opacity: 0;
-                transform: translateY(-10px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            cursor: pointer;
-            font-weight: 600;
-            transition: all 0.3s;
-            margin-right: 10px;
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #6c757d;
-            color: white;
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 5px 20px rgba(0,0,0,0.2);
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .actions {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            grid-template-columns: 1fr 1fr;
             gap: 10px;
             margin-top: 20px;
         }
 
-        .chart-container {
-            position: relative;
-            height: 400px;
-            margin-top: 20px;
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status.processing {
+            background: #fef5e7;
+            color: #8b6914;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
         }
 
         .config-section {
@@ -342,15 +296,17 @@
 <body>
     <div class="container">
         <header>
-            <div class="professional-badge">🌟 Professional Plan</div>
-            <h1>🚀 Fence Platform Professional</h1>
+            <h1>🚀 Invisible Fence ROI Calculator</h1>
             <p class="subtitle">Event-Driven Automation with Dynamic Pricing Tiers</p>
             <div class="header-actions">
-                <a href="/ux-showcase.html">
-                    🎨 View All Features
+                <a href="/property-designer.html" class="header-btn primary">
+                    🏠 Design Fence
                 </a>
-                <a href="https://fence-enterprise-frontend-453424326027.us-central1.run.app" target="_blank">
-                    🏢 Upgrade to Enterprise
+                <a href="/crm-dashboard.html" class="header-btn">
+                    👥 CRM
+                </a>
+                <a href="/ux-showcase.html" class="header-btn">
+                    🎨 All Features
                 </a>
             </div>
         </header>
@@ -358,46 +314,53 @@
         <div id="status" class="status" style="display: none;"></div>
 
         <div class="dashboard">
-            <!-- Tier Selection Card -->
+            <!-- Tier Input Card -->
             <div class="card">
-                <h2>Select Pricing Tier</h2>
+                <h2>Tier Configuration</h2>
                 
                 <div class="tier-selector">
                     <button class="tier-btn active" data-tier="Essentials">Essentials</button>
                     <button class="tier-btn" data-tier="Professional">Professional</button>
                     <button class="tier-btn" data-tier="Enterprise">Enterprise</button>
                 </div>
-                
-                <form id="tier-form" class="form-group">
-                    <div>
-                        <label>Base Price ($)</label>
-                        <input type="number" name="basePrice" value="299" min="0">
+
+                <form id="tier-form">
+                    <div class="form-group">
+                        <label>Base Price ($/month)</label>
+                        <input type="number" name="basePrice" value="299" min="0" step="1">
                     </div>
-                    <div>
-                        <label>Admin Hours/Month</label>
-                        <input type="number" name="adminHours" value="20" min="0">
+                    
+                    <div class="form-group">
+                        <label>Admin Hours Saved</label>
+                        <input type="number" name="adminHours" value="20" min="0" step="1">
                     </div>
-                    <div>
-                        <label>Admin Cost ($/hr)</label>
-                        <input type="number" name="adminCost" value="50" min="0">
+                    
+                    <div class="form-group">
+                        <label>Admin Cost ($)</label>
+                        <input type="number" name="adminCost" value="50" min="0" step="1">
                     </div>
-                    <div>
-                        <label>Travel Hours/Month</label>
-                        <input type="number" name="travelHours" value="10" min="0">
+                    
+                    <div class="form-group">
+                        <label>Travel Hours Optimized</label>
+                        <input type="number" name="travelHours" value="10" min="0" step="1">
                     </div>
-                    <div>
+                    
+                    <div class="form-group">
                         <label>Revenue Leakage (%)</label>
-                        <input type="number" name="revenuLeakagePercent" value="5" min="0" max="100">
+                        <input type="number" name="revenuLeakagePercent" value="5" min="0" max="100" step="0.1">
                     </div>
-                    <div>
-                        <label>Payment Delays ($)</label>
-                        <input type="number" name="paymentDelays" value="500" min="0">
+                    
+                    <div class="form-group">
+                        <label>Payment Delays Recovered ($)</label>
+                        <input type="number" name="paymentDelays" value="500" min="0" step="1">
                     </div>
-                    <div>
+                    
+                    <div class="form-group">
                         <label>Upsell Revenue ($)</label>
-                        <input type="number" name="upsellRevenue" value="0" min="0">
+                        <input type="number" name="upsellRevenue" value="0" min="0" step="1">
                     </div>
-                    <div>
+                    
+                    <div class="form-group">
                         <label>Predictive Maintenance ($)</label>
                         <input type="number" name="predictiveMaintenance" value="0" min="0" step="1">
                     </div>
@@ -411,22 +374,22 @@
                 <div id="roi-results">
                     <div class="roi-metric">
                         <span class="label">Admin Savings</span>
-                        <span class="value" id="admin-savings">$1,000</span>
+                        <span class="value" id="admin-savings">$0</span>
                     </div>
                     
                     <div class="roi-metric">
                         <span class="label">Travel Savings</span>
-                        <span class="value" id="travel-savings">$500</span>
+                        <span class="value" id="travel-savings">$0</span>
                     </div>
                     
                     <div class="roi-metric">
                         <span class="label">Revenue Recovery</span>
-                        <span class="value" id="revenue-recovery">$1,500</span>
+                        <span class="value" id="revenue-recovery">$0</span>
                     </div>
                     
                     <div class="roi-metric">
                         <span class="label">Payment Recovery</span>
-                        <span class="value" id="payment-recovery">$500</span>
+                        <span class="value" id="payment-recovery">$0</span>
                     </div>
                     
                     <div class="roi-metric">
@@ -441,17 +404,17 @@
                     
                     <div class="roi-metric total">
                         <span class="label">Total Monthly ROI</span>
-                        <span class="value" id="monthly-roi">$3,500</span>
+                        <span class="value" id="monthly-roi">$0</span>
                     </div>
                     
                     <div class="roi-metric">
                         <span class="label">Annual ROI</span>
-                        <span class="value" id="annual-roi">$42,000</span>
+                        <span class="value" id="annual-roi">$0</span>
                     </div>
                     
                     <div class="roi-metric">
                         <span class="label">Payback Period</span>
-                        <span class="value" id="payback-period">0.1 months</span>
+                        <span class="value" id="payback-period">0 months</span>
                     </div>
                 </div>
             </div>
@@ -460,25 +423,32 @@
             <div class="card">
                 <h2>Global Configuration</h2>
                 
-                <form id="config-form" class="form-group">
-                    <div>
-                        <label>Hourly Rate ($/hr)</label>
-                        <input type="number" name="hourlyRate" value="50" min="0">
-                    </div>
-                    <div>
-                        <label>Monthly Revenue ($)</label>
-                        <input type="number" name="monthlyRevenue" value="30000" min="0">
-                    </div>
-                    <div>
-                        <label>Manual Admin Hours</label>
-                        <input type="number" name="manualAdminHours" value="40" min="0">
-                    </div>
-                    <div>
-                        <label>Manual Travel Hours</label>
-                        <input type="number" name="manualTravelHours" value="20" min="0">
-                    </div>
-                </form>
-                
+                <div class="config-section">
+                    <form id="config-form">
+                        <div class="config-grid">
+                            <div class="form-group">
+                                <label>Hourly Rate ($)</label>
+                                <input type="number" name="hourlyRate" value="35" min="0" step="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Monthly Revenue ($)</label>
+                                <input type="number" name="monthlyRevenue" value="50000" min="0" step="100">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Manual Admin Hours</label>
+                                <input type="number" name="manualAdminHours" value="80" min="0" step="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Manual Travel Hours</label>
+                                <input type="number" name="manualTravelHours" value="40" min="0" step="1">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
                 <div class="actions">
                     <button class="btn btn-primary" onclick="updateConfiguration()">
                         Update Config
@@ -500,9 +470,36 @@
     </div>
 
     <script>
+        const API_URL = 'http://localhost:3333/api';
         let currentTier = 'Essentials';
+        let eventSource;
         let comparisonChart = null;
 
+        // Initialize event source for real-time updates
+        function initEventSource() {
+            eventSource = new EventSource(`${API_URL}/events`);
+            
+            eventSource.addEventListener('processing', (e) => {
+                const data = JSON.parse(e.data);
+                showStatus(data.status, 'processing');
+            });
+            
+            eventSource.addEventListener('tier-updated', (e) => {
+                const data = JSON.parse(e.data);
+                showStatus(`${data.tier} tier updated successfully`, 'success');
+                fetchCalculations();
+            });
+            
+            eventSource.addEventListener('config-updated', (e) => {
+                showStatus('Configuration updated successfully', 'success');
+                fetchCalculations();
+            });
+            
+            eventSource.addEventListener('charts-ready', (e) => {
+                const data = JSON.parse(e.data);
+                showStatus(`Generated ${data.count} charts`, 'success');
+            });
+        }
 
         // Show status message
         function showStatus(message, type) {
@@ -511,9 +508,11 @@
             statusEl.className = `status ${type}`;
             statusEl.style.display = 'block';
             
-            setTimeout(() => {
-                statusEl.style.display = 'none';
-            }, 3000);
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
         }
 
         // Tier selector
@@ -550,76 +549,70 @@
         async function updateTierInput() {
             const form = document.getElementById('tier-form');
             const formData = new FormData(form);
-            
-            // Calculate locally for Professional tier
             const input = {
                 basePrice: parseFloat(formData.get('basePrice')),
                 adminHours: parseFloat(formData.get('adminHours')),
                 adminCost: parseFloat(formData.get('adminCost')),
                 travelHours: parseFloat(formData.get('travelHours')),
-                revenuLeakagePercent: parseFloat(formData.get('revenuLeakagePercent')),
+                revenuLeakagePercent: parseFloat(formData.get('revenuLeakagePercent')) / 100,
                 paymentDelays: parseFloat(formData.get('paymentDelays')),
                 upsellRevenue: parseFloat(formData.get('upsellRevenue')),
                 predictiveMaintenance: parseFloat(formData.get('predictiveMaintenance'))
             };
             
-            // Calculate ROI locally
-            const calculations = calculateROI(input);
-            updateROIDisplay(calculations);
-            showStatus(`${currentTier} tier updated - ROI: $${calculations.monthlyROI.toLocaleString()}`, 'success');
+            try {
+                const response = await fetch(`${API_URL}/tiers/${currentTier}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(input)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update tier');
+                
+                // Fetch updated calculations and refresh display + chart
+                await fetchCalculations();
+                showStatus(`${currentTier} tier updated`, 'success');
+                
+            } catch (error) {
+                showStatus('Failed to update tier', 'error');
+                console.error(error);
+            }
         }
 
-        // Professional ROI calculation
-        function calculateROI(input) {
-            const config = getGlobalConfig();
-            
-            const adminSavings = input.adminHours * input.adminCost;
-            const travelSavings = input.travelHours * config.hourlyRate;
-            const revenueRecovery = config.monthlyRevenue * (input.revenuLeakagePercent / 100);
-            const paymentRecovery = input.paymentDelays;
-            const upsellRevenue = input.upsellRevenue;
-            const predictiveMaintenance = input.predictiveMaintenance;
-            
-            const monthlyROI = adminSavings + travelSavings + revenueRecovery + 
-                              paymentRecovery + upsellRevenue + predictiveMaintenance;
-            const annualROI = monthlyROI * 12;
-            const paybackPeriod = input.basePrice / monthlyROI;
-            
-            return {
-                tier: currentTier,
-                adminSavings,
-                travelSavings,
-                revenueRecovery,
-                paymentRecovery,
-                upsellRevenue,
-                predictiveMaintenance,
-                monthlyROI,
-                annualROI,
-                paybackPeriod
-            };
-        }
-
-        // Get global configuration
-        function getGlobalConfig() {
+        // Update configuration
+        async function updateConfiguration() {
             const form = document.getElementById('config-form');
             const formData = new FormData(form);
-            
-            return {
+            const config = {
                 hourlyRate: parseFloat(formData.get('hourlyRate')),
                 monthlyRevenue: parseFloat(formData.get('monthlyRevenue')),
                 manualAdminHours: parseFloat(formData.get('manualAdminHours')),
                 manualTravelHours: parseFloat(formData.get('manualTravelHours'))
             };
-        }
-
-        // Update configuration
-        function updateConfiguration() {
-            updateTierInput();
-            showStatus('Configuration updated successfully', 'success');
+            
+            try {
+                const response = await fetch(`${API_URL}/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update configuration');
+                
+                // Fetch updated calculations with new config and refresh everything
+                await fetchCalculations();
+                showStatus('Configuration updated successfully', 'success');
+                
+            } catch (error) {
+                showStatus('Failed to update configuration', 'error');
+                console.error(error);
+            }
         }
 
         // Load tier data
         function loadTierData(tier) {
+            // This would fetch the tier data from the API
+            // For now, using default values
             const defaults = {
                 'Essentials': {
                     basePrice: 299,
@@ -664,12 +657,24 @@
             form.paymentDelays.value = data.paymentDelays;
             form.upsellRevenue.value = data.upsellRevenue;
             form.predictiveMaintenance.value = data.predictiveMaintenance;
-            
-            updateTierInput();
+        }
+
+        // Fetch calculations
+        async function fetchCalculations() {
+            try {
+                const response = await fetch(`${API_URL}/calculations`);
+                const data = await response.json();
+                
+                if (data.calculations && data.calculations.calculations) {
+                    updateROIDisplay(data.calculations.calculations);
+                }
+            } catch (error) {
+                console.error('Failed to fetch calculations:', error);
+            }
         }
 
         // Create/Update comparison chart
-        function renderComparisonChart() {
+        function renderComparisonChart(calculations) {
             const ctx = document.getElementById('comparison-chart').getContext('2d');
             
             // Destroy existing chart if it exists
@@ -677,21 +682,11 @@
                 comparisonChart.destroy();
             }
             
-            // Calculate for all tiers
-            const tiers = ['Essentials', 'Professional', 'Enterprise'];
-            const calculations = tiers.map(tier => {
-                const defaults = {
-                    'Essentials': { basePrice: 299, adminHours: 20, adminCost: 50, travelHours: 10, revenuLeakagePercent: 5, paymentDelays: 500, upsellRevenue: 0, predictiveMaintenance: 0 },
-                    'Professional': { basePrice: 599, adminHours: 40, adminCost: 75, travelHours: 20, revenuLeakagePercent: 8, paymentDelays: 1000, upsellRevenue: 500, predictiveMaintenance: 0 },
-                    'Enterprise': { basePrice: 999, adminHours: 60, adminCost: 100, travelHours: 30, revenuLeakagePercent: 12, paymentDelays: 2000, upsellRevenue: 1500, predictiveMaintenance: 1000 }
-                };
-                
-                const tempTier = currentTier;
-                currentTier = tier;
-                const result = calculateROI(defaults[tier]);
-                currentTier = tempTier;
-                return result;
-            });
+            const tiers = calculations.map(c => c.tier);
+            const monthlyROI = calculations.map(c => c.monthlyROI);
+            const adminSavings = calculations.map(c => c.adminSavings);
+            const travelSavings = calculations.map(c => c.travelSavings);
+            const revenueRecovery = calculations.map(c => c.revenueRecovery);
             
             comparisonChart = new Chart(ctx, {
                 type: 'bar',
@@ -699,32 +694,39 @@
                     labels: tiers,
                     datasets: [
                         {
-                            label: 'Total Monthly ROI',
-                            data: calculations.map(c => c.monthlyROI),
+                            label: 'Admin Savings',
+                            data: adminSavings,
                             backgroundColor: 'rgba(102, 126, 234, 0.8)',
                             borderColor: 'rgba(102, 126, 234, 1)',
                             borderWidth: 2
                         },
                         {
-                            label: 'Admin Savings',
-                            data: calculations.map(c => c.adminSavings),
+                            label: 'Travel Savings', 
+                            data: travelSavings,
                             backgroundColor: 'rgba(72, 187, 120, 0.8)',
                             borderColor: 'rgba(72, 187, 120, 1)',
                             borderWidth: 2
                         },
                         {
-                            label: 'Travel Savings',
-                            data: calculations.map(c => c.travelSavings),
-                            backgroundColor: 'rgba(251, 188, 5, 0.8)',
-                            borderColor: 'rgba(251, 188, 5, 1)',
+                            label: 'Revenue Recovery',
+                            data: revenueRecovery,
+                            backgroundColor: 'rgba(245, 101, 101, 0.8)',
+                            borderColor: 'rgba(245, 101, 101, 1)',
                             borderWidth: 2
                         },
                         {
-                            label: 'Revenue Recovery',
-                            data: calculations.map(c => c.revenueRecovery),
-                            backgroundColor: 'rgba(237, 100, 166, 0.8)',
-                            borderColor: 'rgba(237, 100, 166, 1)',
-                            borderWidth: 2
+                            label: 'Total Monthly ROI',
+                            data: monthlyROI,
+                            type: 'line',
+                            backgroundColor: 'rgba(118, 75, 162, 0.2)',
+                            borderColor: 'rgba(118, 75, 162, 1)',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.4,
+                            pointBackgroundColor: 'rgba(118, 75, 162, 1)',
+                            pointBorderColor: 'white',
+                            pointBorderWidth: 2,
+                            pointRadius: 6
                         }
                     ]
                 },
@@ -738,8 +740,11 @@
                     plugins: {
                         title: {
                             display: true,
-                            text: 'Professional Plan - ROI Comparison Across Tiers',
-                            font: { size: 16, weight: 'bold' },
+                            text: 'ROI Comparison Across Tiers',
+                            font: {
+                                size: 16,
+                                weight: 'bold'
+                            },
                             color: '#333'
                         },
                         legend: {
@@ -747,7 +752,9 @@
                             labels: {
                                 usePointStyle: true,
                                 padding: 20,
-                                font: { size: 12 }
+                                font: {
+                                    size: 12
+                                }
                             }
                         },
                         tooltip: {
@@ -772,63 +779,75 @@
                                 },
                                 color: '#666'
                             },
-                            grid: { color: 'rgba(0, 0, 0, 0.1)' }
+                            grid: {
+                                color: 'rgba(0, 0, 0, 0.1)'
+                            }
                         },
                         x: {
-                            ticks: { color: '#666', font: { weight: 'bold' } },
-                            grid: { display: false }
+                            ticks: {
+                                color: '#666',
+                                font: {
+                                    weight: 'bold'
+                                }
+                            },
+                            grid: {
+                                display: false
+                            }
                         }
                     },
-                    animation: { duration: 1000, easing: 'easeInOutQuart' }
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutQuart'
+                    }
                 }
             });
         }
 
         // Update ROI display
-        function updateROIDisplay(calc) {
-            document.getElementById('admin-savings').textContent = `$${calc.adminSavings.toLocaleString()}`;
-            document.getElementById('travel-savings').textContent = `$${calc.travelSavings.toLocaleString()}`;
-            document.getElementById('revenue-recovery').textContent = `$${calc.revenueRecovery.toLocaleString()}`;
-            document.getElementById('payment-recovery').textContent = `$${calc.paymentRecovery.toLocaleString()}`;
-            document.getElementById('upsell-revenue').textContent = `$${calc.upsellRevenue.toLocaleString()}`;
-            document.getElementById('predictive-maintenance').textContent = `$${calc.predictiveMaintenance.toLocaleString()}`;
-            document.getElementById('monthly-roi').textContent = `$${calc.monthlyROI.toLocaleString()}`;
-            document.getElementById('annual-roi').textContent = `$${calc.annualROI.toLocaleString()}`;
+        function updateROIDisplay(calculations) {
+            const calc = calculations.find(c => c.tier === currentTier);
+            if (!calc) return;
+            
+            // Update individual metrics display
+            document.getElementById('admin-savings').textContent = `$${calc.adminSavings.toFixed(0)}`;
+            document.getElementById('travel-savings').textContent = `$${calc.travelSavings.toFixed(0)}`;
+            document.getElementById('revenue-recovery').textContent = `$${calc.revenueRecovery.toFixed(0)}`;
+            document.getElementById('payment-recovery').textContent = `$${calc.paymentRecovery.toFixed(0)}`;
+            document.getElementById('upsell-revenue').textContent = `$${calc.upsellRevenue.toFixed(0)}`;
+            document.getElementById('predictive-maintenance').textContent = `$${calc.predictiveMaintenance.toFixed(0)}`;
+            document.getElementById('monthly-roi').textContent = `$${calc.monthlyROI.toFixed(0)}`;
+            document.getElementById('annual-roi').textContent = `$${calc.annualROI.toFixed(0)}`;
             document.getElementById('payback-period').textContent = `${calc.paybackPeriod.toFixed(1)} months`;
             
-            renderComparisonChart();
+            // Update comparison chart with all tiers
+            renderComparisonChart(calculations);
         }
 
         // Export data
-        function exportData() {
-            const data = {
-                plan: 'Professional',
-                monthly_cost: 299,
-                tier: currentTier,
-                roi_data: {
-                    admin_savings: document.getElementById('admin-savings').textContent,
-                    travel_savings: document.getElementById('travel-savings').textContent,
-                    revenue_recovery: document.getElementById('revenue-recovery').textContent,
-                    payment_recovery: document.getElementById('payment-recovery').textContent,
-                    total_monthly_roi: document.getElementById('monthly-roi').textContent,
-                    annual_roi: document.getElementById('annual-roi').textContent,
-                    payback_period: document.getElementById('payback-period').textContent
-                },
-                exported_at: new Date().toISOString()
-            };
-            
-            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `fence-platform-professional-roi-${Date.now()}.json`;
-            a.click();
-            
-            showStatus('Professional data exported successfully', 'success');
+        async function exportData() {
+            try {
+                const response = await fetch(`${API_URL}/export`);
+                const data = await response.json();
+                
+                // Download as JSON
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invisible-fence-roi-${Date.now()}.json`;
+                a.click();
+                
+                showStatus('Data exported successfully', 'success');
+            } catch (error) {
+                showStatus('Failed to export data', 'error');
+                console.error(error);
+            }
         }
 
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            initEventSource();
+            fetchCalculations();
             loadTierData(currentTier);
             
             // Add event listener for config form to update on input change
@@ -837,8 +856,6 @@
                     updateConfiguration();
                 }
             }, 1000));
-            
-            showStatus('Professional Platform loaded successfully', 'success');
         });
     </script>
 </body>
