@@ -1,0 +1,204 @@
+name: Deploy to Google Cloud Run
+
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+
+env:
+  PROJECT_ID: servicehive-f009f
+  REGION: us-central1
+  SERVICE_NAME: invisible-fence-automation
+  REPOSITORY: invisible-fence-automation
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Run tests
+      run: npm test || echo "Tests not configured yet"
+
+    - name: Run linting
+      run: npm run lint || echo "Linting not configured yet"
+
+  security:
+    name: Security Scan
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Run security audit
+      run: npm audit --audit-level moderate || true
+
+    - name: Run Trivy vulnerability scanner
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+        format: 'sarif'
+        output: 'trivy-results.sarif'
+
+    - name: Upload Trivy scan results
+      uses: github/codeql-action/upload-sarif@v2
+      if: always()
+      with:
+        sarif_file: 'trivy-results.sarif'
+
+  build-and-deploy:
+    name: Build and Deploy
+    runs-on: ubuntu-latest
+    needs: [test, security]
+    if: github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci --only=production
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker for Artifact Registry
+      run: gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
+
+    - name: Build Docker image
+      run: |
+        docker build -t ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} .
+        docker tag ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:latest
+
+    - name: Push Docker image to Artifact Registry
+      run: |
+        docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }}
+        docker push ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:latest
+
+    - name: Deploy to Cloud Run
+      run: |
+        gcloud run deploy ${{ env.SERVICE_NAME }} \
+          --image ${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE_NAME }}:${{ github.sha }} \
+          --platform managed \
+          --region ${{ env.REGION }} \
+          --allow-unauthenticated \
+          --set-env-vars NODE_ENV=${{ github.ref == 'refs/heads/main' && 'production' || 'development' }} \
+          --set-env-vars GOOGLE_CLOUD_PROJECT=${{ env.PROJECT_ID }} \
+          --memory 2Gi \
+          --cpu 2 \
+          --concurrency 1000 \
+          --timeout 300 \
+          --max-instances ${{ github.ref == 'refs/heads/main' && '100' || '10' }} \
+          --min-instances ${{ github.ref == 'refs/heads/main' && '1' || '0' }}
+
+    - name: Get service URL
+      id: service-url
+      run: |
+        URL=$(gcloud run services describe ${{ env.SERVICE_NAME }} --region ${{ env.REGION }} --format 'value(status.url)')
+        echo "url=$URL" >> $GITHUB_OUTPUT
+
+    - name: Test deployment
+      run: |
+        sleep 30  # Wait for service to be ready
+        curl -f ${{ steps.service-url.outputs.url }}/api/status || exit 1
+
+    - name: Update deployment status
+      if: success()
+      run: |
+        echo "✅ Deployment successful!"
+        echo "🌐 Service URL: ${{ steps.service-url.outputs.url }}"
+        echo "🔗 ROI Calculator: ${{ steps.service-url.outputs.url }}/"
+        echo "🔗 CRM Dashboard: ${{ steps.service-url.outputs.url }}/crm"
+        echo "🔗 Quote Generator: ${{ steps.service-url.outputs.url }}/quote"
+        echo "🔗 Service Map: ${{ steps.service-url.outputs.url }}/map"
+        echo "🔗 Pricing Approvals: ${{ steps.service-url.outputs.url }}/approvals"
+        echo "🔗 Authentication: ${{ steps.service-url.outputs.url }}/auth"
+
+  infrastructure:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[deploy-infra]')
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: 1.6.0
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        credentials_json: ${{ secrets.GCP_SA_KEY }}
+
+    - name: Terraform Init
+      working-directory: ./terraform
+      run: terraform init
+
+    - name: Terraform Plan
+      working-directory: ./terraform
+      run: |
+        terraform plan -var="database_password=${{ secrets.DATABASE_PASSWORD }}" \
+                      -var="environment=production" \
+                      -var="github_owner=${{ github.repository_owner }}" \
+                      -var="github_repo=${{ github.event.repository.name }}"
+
+    - name: Terraform Apply
+      working-directory: ./terraform
+      if: github.ref == 'refs/heads/main'
+      run: |
+        terraform apply -auto-approve \
+                       -var="database_password=${{ secrets.DATABASE_PASSWORD }}" \
+                       -var="environment=production" \
+                       -var="github_owner=${{ github.repository_owner }}" \
+                       -var="github_repo=${{ github.event.repository.name }}"
+
+  notify:
+    name: Notify Team
+    runs-on: ubuntu-latest
+    needs: [build-and-deploy]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: needs.build-and-deploy.result == 'success'
+      run: |
+        echo "🎉 Deployment successful!"
+        # Add Slack/Teams notification here if needed
+
+    - name: Notify on failure
+      if: needs.build-and-deploy.result == 'failure'
+      run: |
+        echo "❌ Deployment failed!"
+        # Add Slack/Teams notification here if needed

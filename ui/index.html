@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invisible Fence ROI Calculator</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        h1 {
+            color: #333;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1rem;
+        }
+
+        .dashboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 20px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        }
+
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .tier-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .tier-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #ddd;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 600;
+        }
+
+        .tier-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .tier-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            color: #555;
+            margin-bottom: 5px;
+            font-weight: 500;
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .roi-metric {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .roi-metric .label {
+            color: #666;
+            font-weight: 500;
+        }
+
+        .roi-metric .value {
+            color: #333;
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .roi-metric.total {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .roi-metric.total .label,
+        .roi-metric.total .value {
+            color: white;
+        }
+
+        .chart-container {
+            margin-top: 20px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            min-height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .actions {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+        }
+
+        .status {
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 15px;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .status.processing {
+            background: #fef5e7;
+            color: #8b6914;
+        }
+
+        .status.success {
+            background: #e8f5e9;
+            color: #2e7d32;
+        }
+
+        .status.error {
+            background: #ffebee;
+            color: #c62828;
+        }
+
+        .config-section {
+            background: #f0f4f8;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+        }
+
+        .config-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard {
+                grid-template-columns: 1fr;
+            }
+            
+            .actions {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 2rem;
+            }
+        }
+
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(0,0,0,.1);
+            border-radius: 50%;
+            border-top-color: #667eea;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚀 Invisible Fence ROI Calculator</h1>
+            <p class="subtitle">Event-Driven Automation with Dynamic Pricing Tiers</p>
+        </header>
+
+        <div id="status" class="status" style="display: none;"></div>
+
+        <div class="dashboard">
+            <!-- Tier Input Card -->
+            <div class="card">
+                <h2>Tier Configuration</h2>
+                
+                <div class="tier-selector">
+                    <button class="tier-btn active" data-tier="Essentials">Essentials</button>
+                    <button class="tier-btn" data-tier="Professional">Professional</button>
+                    <button class="tier-btn" data-tier="Enterprise">Enterprise</button>
+                </div>
+
+                <form id="tier-form">
+                    <div class="form-group">
+                        <label>Base Price ($/month)</label>
+                        <input type="number" name="basePrice" value="299" min="0" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Admin Hours Saved</label>
+                        <input type="number" name="adminHours" value="20" min="0" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Admin Cost ($)</label>
+                        <input type="number" name="adminCost" value="50" min="0" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Travel Hours Optimized</label>
+                        <input type="number" name="travelHours" value="10" min="0" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Revenue Leakage (%)</label>
+                        <input type="number" name="revenuLeakagePercent" value="5" min="0" max="100" step="0.1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Payment Delays Recovered ($)</label>
+                        <input type="number" name="paymentDelays" value="500" min="0" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Upsell Revenue ($)</label>
+                        <input type="number" name="upsellRevenue" value="0" min="0" step="1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label>Predictive Maintenance ($)</label>
+                        <input type="number" name="predictiveMaintenance" value="0" min="0" step="1">
+                    </div>
+                </form>
+            </div>
+
+            <!-- ROI Results Card -->
+            <div class="card">
+                <h2>ROI Analysis</h2>
+                
+                <div id="roi-results">
+                    <div class="roi-metric">
+                        <span class="label">Admin Savings</span>
+                        <span class="value" id="admin-savings">$0</span>
+                    </div>
+                    
+                    <div class="roi-metric">
+                        <span class="label">Travel Savings</span>
+                        <span class="value" id="travel-savings">$0</span>
+                    </div>
+                    
+                    <div class="roi-metric">
+                        <span class="label">Revenue Recovery</span>
+                        <span class="value" id="revenue-recovery">$0</span>
+                    </div>
+                    
+                    <div class="roi-metric">
+                        <span class="label">Payment Recovery</span>
+                        <span class="value" id="payment-recovery">$0</span>
+                    </div>
+                    
+                    <div class="roi-metric">
+                        <span class="label">Upsell Revenue</span>
+                        <span class="value" id="upsell-revenue">$0</span>
+                    </div>
+                    
+                    <div class="roi-metric">
+                        <span class="label">Predictive Maintenance</span>
+                        <span class="value" id="predictive-maintenance">$0</span>
+                    </div>
+                    
+                    <div class="roi-metric total">
+                        <span class="label">Total Monthly ROI</span>
+                        <span class="value" id="monthly-roi">$0</span>
+                    </div>
+                    
+                    <div class="roi-metric">
+                        <span class="label">Annual ROI</span>
+                        <span class="value" id="annual-roi">$0</span>
+                    </div>
+                    
+                    <div class="roi-metric">
+                        <span class="label">Payback Period</span>
+                        <span class="value" id="payback-period">0 months</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Configuration Card -->
+            <div class="card">
+                <h2>Global Configuration</h2>
+                
+                <div class="config-section">
+                    <form id="config-form">
+                        <div class="config-grid">
+                            <div class="form-group">
+                                <label>Hourly Rate ($)</label>
+                                <input type="number" name="hourlyRate" value="35" min="0" step="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Monthly Revenue ($)</label>
+                                <input type="number" name="monthlyRevenue" value="50000" min="0" step="100">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Manual Admin Hours</label>
+                                <input type="number" name="manualAdminHours" value="80" min="0" step="1">
+                            </div>
+                            
+                            <div class="form-group">
+                                <label>Manual Travel Hours</label>
+                                <input type="number" name="manualTravelHours" value="40" min="0" step="1">
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="actions">
+                    <button class="btn btn-primary" onclick="updateConfiguration()">
+                        Update Config
+                    </button>
+                    <button class="btn btn-secondary" onclick="exportData()">
+                        Export Data
+                    </button>
+                </div>
+            </div>
+
+            <!-- Charts Card -->
+            <div class="card" style="grid-column: span 2;">
+                <h2>Visual Comparison</h2>
+                <div class="chart-container" id="chart-container">
+                    <canvas id="comparison-chart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = 'http://localhost:3333/api';
+        let currentTier = 'Essentials';
+        let eventSource;
+
+        // Initialize event source for real-time updates
+        function initEventSource() {
+            eventSource = new EventSource(`${API_URL}/events`);
+            
+            eventSource.addEventListener('processing', (e) => {
+                const data = JSON.parse(e.data);
+                showStatus(data.status, 'processing');
+            });
+            
+            eventSource.addEventListener('tier-updated', (e) => {
+                const data = JSON.parse(e.data);
+                showStatus(`${data.tier} tier updated successfully`, 'success');
+                fetchCalculations();
+            });
+            
+            eventSource.addEventListener('config-updated', (e) => {
+                showStatus('Configuration updated successfully', 'success');
+                fetchCalculations();
+            });
+            
+            eventSource.addEventListener('charts-ready', (e) => {
+                const data = JSON.parse(e.data);
+                showStatus(`Generated ${data.count} charts`, 'success');
+            });
+        }
+
+        // Show status message
+        function showStatus(message, type) {
+            const statusEl = document.getElementById('status');
+            statusEl.textContent = message;
+            statusEl.className = `status ${type}`;
+            statusEl.style.display = 'block';
+            
+            if (type === 'success' || type === 'error') {
+                setTimeout(() => {
+                    statusEl.style.display = 'none';
+                }, 3000);
+            }
+        }
+
+        // Tier selector
+        document.querySelectorAll('.tier-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.tier-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                currentTier = this.dataset.tier;
+                loadTierData(currentTier);
+            });
+        });
+
+        // Form input handlers
+        document.getElementById('tier-form').addEventListener('input', debounce(function(e) {
+            if (e.target.type === 'number') {
+                updateTierInput();
+            }
+        }, 500));
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Update tier input
+        async function updateTierInput() {
+            const form = document.getElementById('tier-form');
+            const formData = new FormData(form);
+            const input = {
+                basePrice: parseFloat(formData.get('basePrice')),
+                adminHours: parseFloat(formData.get('adminHours')),
+                adminCost: parseFloat(formData.get('adminCost')),
+                travelHours: parseFloat(formData.get('travelHours')),
+                revenuLeakagePercent: parseFloat(formData.get('revenuLeakagePercent')) / 100,
+                paymentDelays: parseFloat(formData.get('paymentDelays')),
+                upsellRevenue: parseFloat(formData.get('upsellRevenue')),
+                predictiveMaintenance: parseFloat(formData.get('predictiveMaintenance'))
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/tiers/${currentTier}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(input)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update tier');
+                
+            } catch (error) {
+                showStatus('Failed to update tier', 'error');
+                console.error(error);
+            }
+        }
+
+        // Update configuration
+        async function updateConfiguration() {
+            const form = document.getElementById('config-form');
+            const formData = new FormData(form);
+            const config = {
+                hourlyRate: parseFloat(formData.get('hourlyRate')),
+                monthlyRevenue: parseFloat(formData.get('monthlyRevenue')),
+                manualAdminHours: parseFloat(formData.get('manualAdminHours')),
+                manualTravelHours: parseFloat(formData.get('manualTravelHours'))
+            };
+            
+            try {
+                const response = await fetch(`${API_URL}/config`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(config)
+                });
+                
+                if (!response.ok) throw new Error('Failed to update configuration');
+                
+            } catch (error) {
+                showStatus('Failed to update configuration', 'error');
+                console.error(error);
+            }
+        }
+
+        // Load tier data
+        function loadTierData(tier) {
+            // This would fetch the tier data from the API
+            // For now, using default values
+            const defaults = {
+                'Essentials': {
+                    basePrice: 299,
+                    adminHours: 20,
+                    adminCost: 50,
+                    travelHours: 10,
+                    revenuLeakagePercent: 5,
+                    paymentDelays: 500,
+                    upsellRevenue: 0,
+                    predictiveMaintenance: 0
+                },
+                'Professional': {
+                    basePrice: 599,
+                    adminHours: 40,
+                    adminCost: 75,
+                    travelHours: 20,
+                    revenuLeakagePercent: 8,
+                    paymentDelays: 1000,
+                    upsellRevenue: 500,
+                    predictiveMaintenance: 0
+                },
+                'Enterprise': {
+                    basePrice: 999,
+                    adminHours: 60,
+                    adminCost: 100,
+                    travelHours: 30,
+                    revenuLeakagePercent: 12,
+                    paymentDelays: 2000,
+                    upsellRevenue: 1500,
+                    predictiveMaintenance: 1000
+                }
+            };
+            
+            const data = defaults[tier];
+            const form = document.getElementById('tier-form');
+            
+            form.basePrice.value = data.basePrice;
+            form.adminHours.value = data.adminHours;
+            form.adminCost.value = data.adminCost;
+            form.travelHours.value = data.travelHours;
+            form.revenuLeakagePercent.value = data.revenuLeakagePercent;
+            form.paymentDelays.value = data.paymentDelays;
+            form.upsellRevenue.value = data.upsellRevenue;
+            form.predictiveMaintenance.value = data.predictiveMaintenance;
+        }
+
+        // Fetch calculations
+        async function fetchCalculations() {
+            try {
+                const response = await fetch(`${API_URL}/calculations`);
+                const data = await response.json();
+                
+                if (data.calculations && data.calculations.calculations) {
+                    updateROIDisplay(data.calculations.calculations);
+                }
+            } catch (error) {
+                console.error('Failed to fetch calculations:', error);
+            }
+        }
+
+        // Update ROI display
+        function updateROIDisplay(calculations) {
+            const calc = calculations.find(c => c.tier === currentTier);
+            if (!calc) return;
+            
+            document.getElementById('admin-savings').textContent = `$${calc.adminSavings.toFixed(0)}`;
+            document.getElementById('travel-savings').textContent = `$${calc.travelSavings.toFixed(0)}`;
+            document.getElementById('revenue-recovery').textContent = `$${calc.revenueRecovery.toFixed(0)}`;
+            document.getElementById('payment-recovery').textContent = `$${calc.paymentRecovery.toFixed(0)}`;
+            document.getElementById('upsell-revenue').textContent = `$${calc.upsellRevenue.toFixed(0)}`;
+            document.getElementById('predictive-maintenance').textContent = `$${calc.predictiveMaintenance.toFixed(0)}`;
+            document.getElementById('monthly-roi').textContent = `$${calc.monthlyROI.toFixed(0)}`;
+            document.getElementById('annual-roi').textContent = `$${calc.annualROI.toFixed(0)}`;
+            document.getElementById('payback-period').textContent = `${calc.paybackPeriod.toFixed(1)} months`;
+        }
+
+        // Export data
+        async function exportData() {
+            try {
+                const response = await fetch(`${API_URL}/export`);
+                const data = await response.json();
+                
+                // Download as JSON
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `invisible-fence-roi-${Date.now()}.json`;
+                a.click();
+                
+                showStatus('Data exported successfully', 'success');
+            } catch (error) {
+                showStatus('Failed to export data', 'error');
+                console.error(error);
+            }
+        }
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            initEventSource();
+            fetchCalculations();
+            loadTierData(currentTier);
+        });
+    </script>
+</body>
+</html>
